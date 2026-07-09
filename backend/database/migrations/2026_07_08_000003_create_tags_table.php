@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('scanned_at')->useCurrent();
             $table->timestamps();
 
-            $table->index(['scan_session_id', 'epc']);
+            $table->unique(['scan_session_id', 'epc']);
             $table->index('scanned_at');
         });
     }
