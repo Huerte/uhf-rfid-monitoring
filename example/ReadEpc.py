@@ -62,42 +62,33 @@ def receivedEpcOver(epcOver: LogBaseEpcOver):
 if __name__ == '__main__':
     g_client = GClient()
     
-    # Connect directly to your network reader
     if g_client.openTcp(("192.168.1.168", 8160)):
         g_client.callEpcInfo = receivedEpc
         g_client.callEpcOver = receivedEpcOver
 
-        print(f"[*] Starting round-robin scan on Antennas: {ACTIVE_ANTENNAS}")
-        print("[*] Press Ctrl+C to stop anytime.")
+        # OR all selected antenna enum values into one bitmask (same strategy as Demo FFFFFFFF)
+        antenna_mask = 0
+        for ant in ACTIVE_ANTENNAS:
+            try:
+                antenna_mask |= getattr(EnumG, f"AntennaNo_{ant}").value
+            except AttributeError:
+                print(f"[!] Invalid antenna ID: {ant}. Skipping.")
+
+        if antenna_mask == 0:
+            antenna_mask = EnumG.AntennaNo_1.value
+
+        msg = MsgBaseInventoryEpc(antennaEnable=antenna_mask,
+                                  inventoryMode=EnumG.InventoryMode_Inventory.value)
+
+        if g_client.sendSynMsg(msg) == 0:
+            print(f"[*] Scanning on Antennas: {ACTIVE_ANTENNAS} (mask=0x{antenna_mask:02X})")
+            print("[*] Press Ctrl+C to stop anytime.")
 
         try:
-            while True:
-                for ant in ACTIVE_ANTENNAS:
-                    try:
-                        # Dynamically grab EnumG.AntennaNo_1, AntennaNo_2, etc.
-                        ant_enum_val = getattr(EnumG, f"AntennaNo_{ant}").value
-                    except AttributeError:
-                        print(f"[!] Invalid Antenna ID configured: {ant}. Skipping.")
-                        continue
-
-                    msg = MsgBaseInventoryEpc(antennaEnable=ant_enum_val,
-                                              inventoryMode=EnumG.InventoryMode_Inventory.value)
-                    
-                    if g_client.sendSynMsg(msg) == 0:
-                        # Let the hardware scan this specific antenna for 500ms
-                        sleep(0.5)
-                        
-                        # Stop the scan before switching to the next antenna
-                        stop = MsgBaseStop()
-                        g_client.sendSynMsg(stop)
-                    else:
-                        print(f"[!] Hardware failed to start Antenna {ant}")
-                        sleep(0.5)
-
+            sleep(3600)
         except KeyboardInterrupt:
             print("\n[*] Stopping scanner manually...")
 
         stop = MsgBaseStop()
         g_client.sendSynMsg(stop)
-
         g_client.close()

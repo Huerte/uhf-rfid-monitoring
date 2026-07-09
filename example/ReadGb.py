@@ -20,29 +20,27 @@ if __name__ == 'main':
         g_client.callEpcInfo = receivedEpc
         g_client.callEpcOver = receivedEpcOver
 
-        print(f"[*] Starting round-robin scan on Antennas: {ACTIVE_ANTENNAS}")
+        antenna_mask = 0
+        for ant in ACTIVE_ANTENNAS:
+            try:
+                antenna_mask |= getattr(EnumG, f"AntennaNo_{ant}").value
+            except AttributeError:
+                print(f"[!] Invalid antenna ID: {ant}. Skipping.")
+
+        if antenna_mask == 0:
+            antenna_mask = EnumG.AntennaNo_1.value
+
+        msg = MsgBaseInventoryEpc(antennaEnable=antenna_mask,
+                                  inventoryMode=EnumG.InventoryMode_Inventory.value)
+
+        if g_client.sendSynMsg(msg) == 0:
+            print(f"[*] Scanning on Antennas: {ACTIVE_ANTENNAS} (mask=0x{antenna_mask:02X})")
+
         try:
-            while True:
-                for ant in ACTIVE_ANTENNAS:
-                    try:
-                        ant_enum_val = getattr(EnumG, f"AntennaNo_{ant}").value
-                    except AttributeError:
-                        continue
-
-                    msg = MsgBaseInventoryEpc(antennaEnable=ant_enum_val,
-                                              inventoryMode=EnumG.InventoryMode_Inventory.value)
-                    
-                    if g_client.sendSynMsg(msg) == 0:
-                        sleep(0.5)
-                        stop = MsgBaseStop()
-                        g_client.sendSynMsg(stop)
-                    else:
-                        sleep(0.5)
-
+            sleep(3600)
         except KeyboardInterrupt:
             pass
 
         stop = MsgBaseStop()
         g_client.sendSynMsg(stop)
-
         g_client.close()
