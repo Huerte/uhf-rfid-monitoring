@@ -18,7 +18,6 @@ Route::prefix('scans')->group(function () {
     Route::get('/{scan}',        [ScanController::class, 'show']);
     Route::post('/{scan}/stop',  [ScanController::class, 'stop']);
     Route::delete('/{scan}',     [ScanController::class, 'destroy']);
-    Route::post('/ingest',       [ScanController::class, 'ingest']);
 });
 
 Route::prefix('tags')->group(function () {

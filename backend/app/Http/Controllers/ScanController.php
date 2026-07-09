@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\TagScanned;
-use App\Models\Reader;
 use App\Models\ScanSession;
-use App\Models\Tag;
 use App\Services\RfidBridgeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -86,40 +83,5 @@ class ScanController extends Controller
     {
         $scan->delete();
         return response()->json(null, 204);
-    }
-
-    public function ingest(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'session_id' => 'required|exists:scan_sessions,id',
-            'tags'       => 'required|array',
-            'tags.*.epc' => 'nullable|string',
-            'tags.*.tid' => 'nullable|string',
-            'tags.*.user_data' => 'nullable|string',
-            'tags.*.antenna'   => 'nullable|integer',
-            'tags.*.rssi'      => 'nullable|integer',
-            'tags.*.protocol'  => 'nullable|string',
-        ]);
-
-        $session = ScanSession::findOrFail($data['session_id']);
-        $created = [];
-
-        foreach ($data['tags'] as $t) {
-            $tag = Tag::create([
-                'scan_session_id' => $session->id,
-                'protocol'        => $t['protocol'] ?? $session->protocol,
-                'epc'             => $t['epc'] ?? null,
-                'tid'             => $t['tid'] ?? null,
-                'user_data'       => $t['user_data'] ?? null,
-                'antenna'         => $t['antenna'] ?? $session->antenna,
-                'rssi'            => $t['rssi'] ?? null,
-                'scanned_at'      => now(),
-            ]);
-
-            broadcast(new TagScanned($tag))->toOthers();
-            $created[] = $tag;
-        }
-
-        return response()->json(['ingested' => count($created)], 201);
     }
 }

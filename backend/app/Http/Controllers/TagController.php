@@ -56,6 +56,22 @@ class TagController extends Controller
             $query->where('scan_session_id', $request->session_id);
         }
 
+        if ($request->filled('epc')) {
+            $query->where('epc', 'like', '%' . $request->epc . '%');
+        }
+
+        if ($request->filled('protocol')) {
+            $query->where('protocol', $request->protocol);
+        }
+
+        if ($request->filled('from')) {
+            $query->where('scanned_at', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $query->where('scanned_at', '<=', $request->to);
+        }
+
         return response()->streamDownload(function () use ($query) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['id', 'session_id', 'protocol', 'epc', 'tid', 'user_data', 'antenna', 'rssi', 'scanned_at']);
