@@ -1,6 +1,8 @@
 from uhf.reader import *
 from time import *
 
+ACTIVE_ANTENNAS = [1, 2, 3, 4]
+
 
 def received6b(info: LogBase6bInfo):
     if info.result == 0:
@@ -15,12 +17,18 @@ if __name__ == '__main__':
     g_client = GClient()
     # if g_client.openSerial(("COM7", 115200)):
     if g_client.openTcp(("192.168.1.168", 8160)):
-        # Subscription tag callback
         g_client.call6bInfo = received6b
         g_client.call6bOver = received6bOver
 
-        # Read 6b tid
-        msg = MsgBaseInventory6b(antennaEnable=EnumG.AntennaNo_1.value,
+        antenna_mask = 0
+        for ant in ACTIVE_ANTENNAS:
+            if 1 <= ant <= 8:
+                antenna_mask |= (1 << (ant - 1))
+        
+        if antenna_mask == 0:
+            antenna_mask = 1
+
+        msg = MsgBaseInventory6b(antennaEnable=antenna_mask,
                                  inventoryMode=EnumG.InventoryMode_Inventory.value,
                                  area=EnumG.ReadMode6b_Tid.value)
         if g_client.sendSynMsg(msg) == 0:
@@ -28,7 +36,6 @@ if __name__ == '__main__':
         else:
             print(msg.rtMsg)
 
-        # The inventory check will be stopped and the connection closed after 5 seconds.
         sleep(5)
 
         stop = MsgBaseStop()

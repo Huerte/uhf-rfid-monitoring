@@ -1,6 +1,8 @@
 from uhf.reader import *
 from time import *
 
+ACTIVE_ANTENNAS = [1, 2, 3, 4]
+
 
 def receivedEpc(epcInfo: LogBaseEpcInfo):
     if epcInfo.result == 0:
@@ -15,17 +17,22 @@ if __name__ == 'main':
     g_client = GClient()
     # if g_client.openSerial(("COM7", 115200)):
     if g_client.openTcp(("192.168.1.168", 8160)):
-        # Subscription tag callback
         g_client.callEpcInfo = receivedEpc
         g_client.callEpcOver = receivedEpcOver
 
-        # Read EPC
-        msg = MsgBaseInventoryEpc(antennaEnable=EnumG.AntennaNo_1.value,
+        antenna_mask = 0
+        for ant in ACTIVE_ANTENNAS:
+            if 1 <= ant <= 8:
+                antenna_mask |= (1 << (ant - 1))
+        
+        if antenna_mask == 0:
+            antenna_mask = 1
+
+        msg = MsgBaseInventoryEpc(antennaEnable=antenna_mask,
                                   inventoryMode=EnumG.InventoryMode_Inventory.value)
         if g_client.sendSynMsg(msg) == 0:
             print(msg.rtMsg)
 
-        # The inventory check will be stopped and the connection closed after 5 seconds.
         sleep(5)
 
         stop = MsgBaseStop()
