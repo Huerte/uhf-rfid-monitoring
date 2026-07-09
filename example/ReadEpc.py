@@ -33,11 +33,18 @@ def receivedEpc(epcInfo: LogBaseEpcInfo):
             req = urllib.request.Request(
                 "http://127.0.0.1:8000/api/scans/standalone-ingest", 
                 data=payload, 
-                headers={'Content-Type': 'application/json'}
+                headers={
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
             )
             urllib.request.urlopen(req, timeout=2.0)
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode('utf-8')
+            print(f"[!] Failed to send tag {tag_id} to Laravel: HTTP {e.code}")
+            print(f"    Reason: {error_body}")
         except Exception as e:
-            print(f"[!] Failed to send tag {tag_id} to Laravel: {e}")
+            print(f"[!] Failed to connect to Laravel: {e}")
 
 def receivedEpcOver(epcOver: LogBaseEpcOver):
     print("--- Batch Scan Cycle Ended ---")
