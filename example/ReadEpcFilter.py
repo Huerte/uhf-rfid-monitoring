@@ -1,6 +1,8 @@
 from uhf.reader import *
 from time import *
 
+ACTIVE_ANTENNAS = [1, 2, 3, 4]
+
 
 def receivedEpc(epcInfo: LogBaseEpcInfo):
     if epcInfo.result == 0:
@@ -15,38 +17,33 @@ if __name__ == '__main__':
     g_client = GClient()
     # if g_client.openSerial(("COM7", 115200)):
     if g_client.openTcp(("192.168.1.168", 8160)):
-        # 订阅标签回调
         g_client.callEpcInfo = receivedEpc
         g_client.callEpcOver = receivedEpcOver
 
-        # Read 
-        msg = MsgBaseInventoryEpc(antennaEnable=EnumG.AntennaNo_1.value,
+        antenna_mask = 0
+        for ant in ACTIVE_ANTENNAS:
+            try:
+                antenna_mask |= getattr(EnumG, f"AntennaNo_{ant}").value
+            except AttributeError:
+                print(f"[!] Invalid antenna ID: {ant}. Skipping.")
+
+        if antenna_mask == 0:
+            antenna_mask = EnumG.AntennaNo_1.value
+
+        msg = MsgBaseInventoryEpc(antennaEnable=antenna_mask,
                                   inventoryMode=EnumG.InventoryMode_Inventory.value)
 
-        # Matching TID Read E280110520007993A8F708A8 Optional Parameters
-        # epc_filter = ParamEpcFilter(EnumG.ParamFilterArea_TID.value, 0, "E280110520007993A8F708A8")
-        # msg.filter = epc_filter
-
-        # Read TID Default is read-only EPC Optional parameter
         tid = ParamEpcReadTid(mode=EnumG.ParamTidMode_Auto.value, dataLen=6)
         msg.readTid = tid
 
-        # Read UserData Optional Parameters
-        # userData = ParamEpcReadUserData(start=0, dataLen=4)  # word
-        # msg.readUserData = userData
-
-        # Read reserved area (optional parameters)
-        # reserved = ParamEpcReadReserved(start=0, dataLen=4)  # word
-        # msg.readReserved = reserved
-
         if g_client.sendSynMsg(msg) == 0:
-            print(msg.rtMsg)
+            print(f"[*] Scanning on Antennas: {ACTIVE_ANTENNAS} (mask=0x{antenna_mask:02X})")
 
-        # The inventory check will be stopped and the connection closed after 5 seconds.
-        sleep(5)
+        try:
+            sleep(3600)
+        except KeyboardInterrupt:
+            pass
 
         stop = MsgBaseStop()
-        if g_client.sendSynMsg(stop) == 0:
-            print(stop.rtMsg)
-
+        g_client.sendSynMsg(stop)
         g_client.close()

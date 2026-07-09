@@ -1,6 +1,8 @@
 from uhf.reader import *
 from time import *
 
+ACTIVE_ANTENNAS = [1, 2, 3, 4]
+
 
 def received6b(info: LogBase6bInfo):
     if info.result == 0:
@@ -15,31 +17,34 @@ if __name__ == '__main__':
     g_client = GClient()
     # if g_client.openSerial(("COM7", 115200)):
     if g_client.openTcp(("192.168.1.168", 8160)):
-        # Subscription tag callback
         g_client.call6bInfo = received6b
         g_client.call6bOver = received6bOver
 
-        # Read 6B tid
-        msg = MsgBaseInventory6b(antennaEnable=EnumG.AntennaNo_1.value,
+        antenna_mask = 0
+        for ant in ACTIVE_ANTENNAS:
+            try:
+                antenna_mask |= getattr(EnumG, f"AntennaNo_{ant}").value
+            except AttributeError:
+                print(f"[!] Invalid antenna ID: {ant}. Skipping.")
+
+        if antenna_mask == 0:
+            antenna_mask = EnumG.AntennaNo_1.value
+
+        msg = MsgBaseInventory6b(antennaEnable=antenna_mask,
                                  inventoryMode=EnumG.InventoryMode_Inventory.value,
                                  area=EnumG.ReadMode6b_TidAndUserData.value)
-        # Read user area Optional parameters
-        userData = Param6bReadUserData(start=0, dataLen=10)  # byte
+
+        userData = Param6bReadUserData(start=0, dataLen=10)
         msg.readUserData = userData
 
-        # Matching TID Optional parameters
-        # msg.hexMatchTid("E0040000B6B3E808")
-
         if g_client.sendSynMsg(msg) == 0:
-            print(msg.rtMsg)
-        else:
-            print(msg.rtMsg)
+            print(f"[*] Scanning on Antennas: {ACTIVE_ANTENNAS} (mask=0x{antenna_mask:02X})")
 
-        # The inventory check will be stopped and the connection closed after 5 seconds.
-        sleep(5)
+        try:
+            sleep(3600)
+        except KeyboardInterrupt:
+            pass
 
         stop = MsgBaseStop()
-        if g_client.sendSynMsg(stop) == 0:
-            print(stop.rtMsg)
-
+        g_client.sendSynMsg(stop)
         g_client.close()
