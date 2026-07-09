@@ -19,4 +19,4 @@ class ReaderFactory extends Factory
             'connected_at' => $this->faker->dateTimeThisMonth(),
         ];
     }
-}
+} 
