@@ -6,20 +6,10 @@ import urllib.request
 import json
 
 ACTIVE_ANTENNAS = [1, 2, 3, 4]
-COOLDOWN_SECONDS = 5
-
-SEEN_TAGS = {}
 
 def receivedEpc(epcInfo: LogBaseEpcInfo):
     if epcInfo.result == 0:
         tag_id = epcInfo.epc
-        current_time = time()
-        
-        if tag_id in SEEN_TAGS:
-            if (current_time - SEEN_TAGS[tag_id]) < COOLDOWN_SECONDS:
-                return
-                
-        SEEN_TAGS[tag_id] = current_time
 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         

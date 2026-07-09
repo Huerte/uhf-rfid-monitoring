@@ -30,15 +30,27 @@ class StandaloneIngestController extends Controller
             ['protocol' => $data['protocol'] ?? 'epc', 'antenna' => 1]
         );
 
-        $tag = Tag::create([
-            'scan_session_id' => $session->id,
-            'protocol'        => $data['protocol'] ?? 'epc',
-            'epc'             => $data['epc'],
-            'tid'             => $data['tid'] ?? null,
-            'rssi'            => $data['rssi'] ?? null,
-            'antenna'         => $data['antenna'] ?? 1,
-            'scanned_at'      => now(),
-        ]);
+        try {
+            $tag = Tag::firstOrCreate(
+                [
+                    'scan_session_id' => $session->id,
+                    'epc'             => $data['epc'],
+                ],
+                [
+                    'protocol'   => $data['protocol'] ?? 'epc',
+                    'tid'        => $data['tid'] ?? null,
+                    'rssi'       => $data['rssi'] ?? null,
+                    'antenna'    => $data['antenna'] ?? 1,
+                    'scanned_at' => now(),
+                ]
+            );
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json(['status' => 'ignored'], 200);
+        }
+
+        if (!$tag->wasRecentlyCreated) {
+            return response()->json(['status' => 'ignored'], 200);
+        }
 
         \App\Events\TagScanned::dispatch($tag);
 
