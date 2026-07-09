@@ -45,6 +45,8 @@ class StandaloneIngestController extends Controller
             'scanned_at'      => now(),
         ]);
 
+        \App\Events\TagScanned::dispatch($tag);
+
         return response()->json(['status' => 'success', 'tag_id' => $tag->id], 201);
     }
 }
