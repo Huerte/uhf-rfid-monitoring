@@ -43,6 +43,7 @@ class ScanController extends Controller
 
         $bridgePayload = [
             'antenna'        => $session->antenna,
+            'antennas'       => config('rfid.antennas', [1]),
             'read_tid'       => $session->read_tid,
             'read_user_data' => $session->read_user_data,
             'session_id'     => $session->id,

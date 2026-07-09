@@ -33,7 +33,7 @@ def send_tag_to_laravel(tag_data: Dict[str, Any]) -> None:
     try:
         httpx.post(
             f"{LARAVEL_API_URL}/scans/ingest",
-            json={"session_id": CURRENT_SESSION_ID, "tags": [tag_data]},
+            json={"session_id": sid, "tags": [tag_data]},
             timeout=2.0
         )
     except Exception as e:
@@ -98,60 +98,70 @@ def status():
     return {"status": "connected" if g_client.isConnect else "disconnected"}
 
 class ScanReq(BaseModel):
+    # Single antenna number (legacy) OR a list of antenna numbers.
+    # If 'antennas' list is provided it takes priority over 'antenna'.
+    # The G-series SDK accepts a bitmask: antenna 1 = 0x01, antenna 2 = 0x02, etc.
     antenna: int = 1
+    antennas: list[int] = []
     session_id: int
     read_tid: bool = False
     read_user_data: bool = False
     filter_tid: Optional[str] = None
 
+    def antenna_mask(self) -> int:
+        """Convert the antennas list to a bitmask. Falls back to single antenna."""
+        targets = self.antennas if self.antennas else [self.antenna]
+        mask = 0
+        for n in targets:
+            if 1 <= n <= 8:
+                mask |= (1 << (n - 1))
+        return mask if mask else 1  # default to antenna 1 if nothing valid
+
 @app.post("/scan/epc/start")
 def scan_epc_start(req: ScanReq):
-    global CURRENT_SESSION_ID
-    CURRENT_SESSION_ID = req.session_id
-    
-    msg = MsgBaseInventoryEpc(antennaEnable=req.antenna, inventoryMode=EnumG.InventoryMode_Inventory.value)
-    
+    set_session_id(req.session_id)
+
+    msg = MsgBaseInventoryEpc(antennaEnable=req.antenna_mask(), inventoryMode=EnumG.InventoryMode_Inventory.value)
+
     if req.filter_tid:
         msg.filter = ParamEpcFilter(EnumG.ParamFilterArea_TID.value, 0, req.filter_tid)
-        
+
     if req.read_tid:
         msg.readTid = ParamEpcReadTid(mode=EnumG.ParamTidMode_Auto.value, dataLen=6)
-        
+
     if req.read_user_data:
         msg.readUserData = ParamEpcReadUserData(start=0, dataLen=4)
-        
+
     res = g_client.sendSynMsg(msg)
-    return {"status": "started" if res == 0 else "error", "message": msg.rtMsg}
+    return {"status": "started" if res == 0 else "error", "message": msg.rtMsg, "antenna_mask": req.antenna_mask()}
 
 @app.post("/scan/6b/start")
 def scan_6b_start(req: ScanReq):
-    global CURRENT_SESSION_ID
-    CURRENT_SESSION_ID = req.session_id
-    
+    set_session_id(req.session_id)
+
     area = EnumG.ReadMode6b_TidAndUserData.value if req.read_user_data else EnumG.ReadMode6b_Tid.value
-    msg = MsgBaseInventory6b(antennaEnable=req.antenna, inventoryMode=EnumG.InventoryMode_Inventory.value, area=area)
-    
+    msg = MsgBaseInventory6b(antennaEnable=req.antenna_mask(), inventoryMode=EnumG.InventoryMode_Inventory.value, area=area)
+
     if req.read_user_data:
         msg.readUserData = Param6bReadUserData(start=0, dataLen=10)
-        
+
     res = g_client.sendSynMsg(msg)
-    return {"status": "started" if res == 0 else "error", "message": msg.rtMsg}
+    return {"status": "started" if res == 0 else "error", "message": msg.rtMsg, "antenna_mask": req.antenna_mask()}
 
 @app.post("/scan/gb/start")
 def scan_gb_start(req: ScanReq):
-    global CURRENT_SESSION_ID
-    CURRENT_SESSION_ID = req.session_id
-    
-    msg = MsgBaseInventoryGb(antennaEnable=req.antenna, inventoryMode=EnumG.InventoryMode_Inventory.value)
-    
+    set_session_id(req.session_id)
+
+    msg = MsgBaseInventoryGb(antennaEnable=req.antenna_mask(), inventoryMode=EnumG.InventoryMode_Inventory.value)
+
     if req.filter_tid:
         msg.filter = ParamEpcFilter(area=0x00, bitStart=0, hexData=req.filter_tid)
-        
+
     if req.read_tid:
         msg.readTid = ParamEpcReadTid(mode=EnumG.ParamTidMode_Auto.value, dataLen=6)
-        
+
     res = g_client.sendSynMsg(msg)
-    return {"status": "started" if res == 0 else "error", "message": msg.rtMsg}
+    return {"status": "started" if res == 0 else "error", "message": msg.rtMsg, "antenna_mask": req.antenna_mask()}
 
 @app.post("/scan/stop")
 def scan_stop():
