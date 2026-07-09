@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ScanSession extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'reader_id', 'protocol', 'antenna', 'read_tid',
         'read_user_data', 'status', 'error_message', 'started_at', 'ended_at',

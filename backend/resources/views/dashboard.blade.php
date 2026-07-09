@@ -3,96 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFID Live Dashboard</title>
+    <title>Device Management Platform</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-8">
-    <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6">Live RFID Tag Dashboard</h1>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #9E9E9E; /* Classic Windows gray background */
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
         
-        <div class="grid grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded shadow">
-                <h3 class="text-gray-500">Total Tags</h3>
-                <p class="text-3xl font-bold" id="total-tags">{{ $stats['total_tags'] }}</p>
-            </div>
-            <div class="bg-white p-6 rounded shadow">
-                <h3 class="text-gray-500">Sessions</h3>
-                <p class="text-3xl font-bold">{{ $stats['total_sessions'] }}</p>
-            </div>
-            <div class="bg-white p-6 rounded shadow">
-                <h3 class="text-gray-500">Running Scans</h3>
-                <p class="text-3xl font-bold">{{ $stats['running'] }}</p>
-            </div>
-        </div>
+        .grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            font-size: 12px;
+            table-layout: fixed; /* Keep columns from jumping */
+        }
+        
+        .grid-table th {
+            font-weight: normal;
+            text-align: left;
+            padding: 4px 6px;
+            border-right: 1px solid #D4D4D4;
+            border-bottom: 1px solid #D4D4D4;
+            background-color: #FFFFFF;
+            color: #000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 1px 0 #D4D4D4;
+        }
 
-        <div class="bg-white rounded shadow overflow-hidden">
-            <div class="p-4 border-b">
-                <h2 class="text-xl font-bold">Live Data Stream</h2>
-            </div>
-            <table class="w-full text-left">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="p-4">Time</th>
-                        <th class="p-4">Protocol</th>
-                        <th class="p-4">EPC</th>
-                        <th class="p-4">TID</th>
-                        <th class="p-4">User Data</th>
-                        <th class="p-4">RSSI</th>
-                        <th class="p-4">Antenna</th>
-                    </tr>
-                </thead>
-                <tbody id="tags-table">
-                    @foreach($stats['recent_tags'] as $tag)
-                    <tr class="border-b">
-                        <td class="p-4">{{ $tag->scanned_at }}</td>
-                        <td class="p-4">{{ $tag->protocol }}</td>
-                        <td class="p-4">{{ $tag->epc }}</td>
-                        <td class="p-4">{{ $tag->tid }}</td>
-                        <td class="p-4">{{ $tag->user_data }}</td>
-                        <td class="p-4">{{ $tag->rssi }}</td>
-                        <td class="p-4">{{ $tag->antenna }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+
+
+        .grid-table td {
+            padding: 2px 6px;
+            border-right: 1px solid #D4D4D4;
+            border-bottom: 1px solid #D4D4D4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #000;
+            height: 22px;
+        }
+
+        /* The row number column */
+        .grid-table th:first-child, .grid-table td:first-child {
+            width: 40px;
+            text-align: center;
+            background-color: #F0F0F0;
+            border-right: 1px solid #D4D4D4;
+            position: relative;
+        }
+
+        /* Selected row styling (classic windows blue) */
+        .selected-row td {
+            background-color: #0078D7 !important;
+            color: white !important;
+        }
+        .selected-row td:first-child {
+            background-color: #F0F0F0 !important;
+            color: black !important;
+        }
+
+        /* Selected arrow indicator */
+        .selected-row td:first-child::before {
+            content: "▶";
+            position: absolute;
+            left: 4px;
+            font-size: 9px;
+            color: black;
+            line-height: 18px;
+        }
+
+        /* Proportional column widths */
+        .col-type { width: 5%; }
+        .col-epc { width: 25%; }
+        .col-tid { width: 20%; }
+        .col-userdata { width: 12%; }
+        .col-reserved { width: 10%; }
+        .col-epcbank { width: 6%; }
+        .col-total { width: 6%; }
+        .col-ant { width: 4%; }
+        .col-rssi { width: 5%; }
+        
+        .table-container {
+            background-color: white;
+            border: 1px solid #7A7A7A;
+            overflow-y: auto;
+            flex: 1; /* Fills the whole vertical space */
+            width: 100%; /* Fills the whole horizontal space */
+        }
+    </style>
+</head>
+<body>
+    <div class="flex items-center gap-3 p-3 bg-[#F0F0F0] border-b border-[#A0A0A0] shadow-sm">
+        <button id="btn-pause" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span id="pause-text">Pause Stream</span>
+        </button>
+        <button id="btn-export" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 border border-blue-700 rounded shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all">
+            <svg class="w-4 h-4 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <span>Export to CSV</span>
+        </button>
+        <div class="h-6 w-px bg-gray-300 mx-2"></div>
+        <button id="btn-clear" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            <span>Clear Table</span>
+        </button>
+        <div class="flex-1"></div>
+        <div class="relative flex items-center">
+            <svg class="w-4 h-4 text-gray-400 absolute left-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" id="search-input" placeholder="Search EPC/TID..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 shadow-sm text-gray-700">
         </div>
+    </div>
+    <div class="table-container">
+        <table class="grid-table" id="tags-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th class="col-type">Type</th>
+                    <th class="col-epc">EPC</th>
+                    <th class="col-tid">TID</th>
+                    <th class="col-userdata">Userdata</th>
+                    <th class="col-reserved">Reservedata</th>
+                    <th class="col-epcbank">EPCBank</th>
+                    <th class="col-total">Totalcount</th>
+                    <th class="col-ant">Ant1</th>
+                    <th class="col-ant">Ant2</th>
+                    <th class="col-ant">Ant3</th>
+                    <th class="col-ant">Ant4</th>
+                    <th class="col-rssi">Rssi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($stats['recent_tags'] as $index => $tag)
+                <tr class="{{ $index === 0 ? 'selected-row' : '' }}">
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ strtolower($tag->protocol) }}</td>
+                    <td>{{ $tag->epc }}</td>
+                    <td>{{ $tag->tid }}</td>
+                    <td>{{ $tag->user_data }}</td>
+                    <td></td>
+                    <td>2</td>
+                    <td>1</td>
+                    <td>{{ $tag->antenna == 1 ? '1' : '0' }}</td>
+                    <td>{{ $tag->antenna == 2 ? '1' : '0' }}</td>
+                    <td>{{ $tag->antenna == 3 ? '1' : '0' }}</td>
+                    <td>{{ $tag->antenna == 4 ? '1' : '0' }}</td>
+                    <td>{{ $tag->rssi }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 
     <script type="module">
-        let totalTags = {{ $stats['total_tags'] }};
-        
-        // Listen to the Reverb websocket channel
+        let rowCount = {{ count($stats['recent_tags']) }};
+        const tableBody = document.querySelector('#tags-table tbody');
+
+        // Function to handle row selection highlighting
+        function updateSelection() {
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                if (index === 0) {
+                    row.classList.add('selected-row');
+                } else {
+                    row.classList.remove('selected-row');
+                }
+            });
+        }
+
+        let isPaused = false;
+        const pauseBtn = document.getElementById('btn-pause');
+        const pauseText = document.getElementById('pause-text');
+        const exportBtn = document.getElementById('btn-export');
+
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            pauseText.innerText = isPaused ? 'Resume Stream' : 'Pause Stream';
+            
+            if(isPaused) {
+                pauseBtn.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+                pauseBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+                pauseBtn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-300');
+            } else {
+                pauseBtn.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+                pauseBtn.classList.remove('bg-blue-50', 'text-blue-700', 'border-blue-300');
+                pauseBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+            }
+        });
+
+        exportBtn.addEventListener('click', () => {
+            let csv = [];
+            let headers = [];
+            document.querySelectorAll("#tags-table thead th").forEach((th, index) => {
+                if(index > 0) headers.push(th.innerText);
+            });
+            csv.push(headers.join(","));
+
+            let rows = document.querySelectorAll("#tags-table tbody tr");
+            rows.forEach(row => {
+                let rowData = [];
+                row.querySelectorAll("td").forEach((td, index) => {
+                    if(index > 0) rowData.push(td.innerText);
+                });
+                csv.push(rowData.join(","));
+            });
+
+            let csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
+            let downloadLink = document.createElement("a");
+            downloadLink.download = "rfid_data.csv";
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        });
+
+        // Clear button logic
+        const clearBtn = document.getElementById('btn-clear');
+        clearBtn.addEventListener('click', () => {
+            tableBody.innerHTML = '';
+            rowCount = 0;
+        });
+
+        // Search logic
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                if(text.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Click to copy logic
+        tableBody.addEventListener('click', async (e) => {
+            const tr = e.target.closest('tr');
+            if(!tr) return;
+            // Get EPC which is the 3rd column (index 2)
+            const epc = tr.children[2].innerText;
+            if(epc) {
+                try {
+                    await navigator.clipboard.writeText(epc);
+                    const originalBg = tr.style.backgroundColor;
+                    tr.style.backgroundColor = '#dcfce3'; // light green feedback
+                    setTimeout(() => {
+                        tr.style.backgroundColor = originalBg;
+                        updateSelection(); 
+                    }, 300);
+                } catch(err) {
+                    console.error('Failed to copy', err);
+                }
+            }
+        });
+
         setTimeout(() => {
             if (window.Echo) {
                 window.Echo.channel('rfid.live')
                     .listen('.tag.scanned', (e) => {
-                        totalTags++;
-                        document.getElementById('total-tags').innerText = totalTags;
+                        if (isPaused) return;
+
+                        rowCount++;
                         
-                        const table = document.getElementById('tags-table');
                         const row = document.createElement('tr');
-                        row.className = 'border-b bg-green-50 transition-colors duration-500';
                         
                         row.innerHTML = `
-                            <td class="p-4">${e.scanned_at || '-'}</td>
-                            <td class="p-4">${e.protocol || '-'}</td>
-                            <td class="p-4">${e.epc || '-'}</td>
-                            <td class="p-4">${e.tid || '-'}</td>
-                            <td class="p-4">${e.user_data || '-'}</td>
-                            <td class="p-4">${e.rssi || '-'}</td>
-                            <td class="p-4">${e.antenna || '-'}</td>
+                            <td>${rowCount}</td>
+                            <td>${(e.protocol || '').toLowerCase()}</td>
+                            <td>${e.epc || ''}</td>
+                            <td>${e.tid || ''}</td>
+                            <td>${e.user_data || ''}</td>
+                            <td></td>
+                            <td>2</td>
+                            <td>1</td>
+                            <td>${e.antenna == 1 ? '1' : '0'}</td>
+                            <td>${e.antenna == 2 ? '1' : '0'}</td>
+                            <td>${e.antenna == 3 ? '1' : '0'}</td>
+                            <td>${e.antenna == 4 ? '1' : '0'}</td>
+                            <td>${e.rssi || ''}</td>
                         `;
-                        
-                        table.insertBefore(row, table.firstChild);
-                        
-                        if (table.children.length > 20) {
-                            table.removeChild(table.lastChild);
+
+                        // Apply current filter to new row
+                        const term = searchInput.value.toLowerCase();
+                        if(term && !row.innerText.toLowerCase().includes(term)) {
+                            row.style.display = 'none';
                         }
                         
-                        setTimeout(() => {
-                            row.classList.remove('bg-green-50');
-                        }, 1000);
+                        // Insert at the top
+                        tableBody.insertBefore(row, tableBody.firstChild);
+                        
+                        // Keep only recent 100 tags in DOM to match desktop performance
+                        if (tableBody.children.length > 100) {
+                            tableBody.removeChild(tableBody.lastChild);
+                        }
+
+                        // Maintain the blue highlight on the very first row
+                        updateSelection();
                     });
             }
         }, 1000);

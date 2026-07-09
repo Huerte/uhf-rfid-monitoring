@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Tag extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'scan_session_id', 'protocol', 'epc', 'tid',
         'user_data', 'antenna', 'rssi', 'scanned_at',
