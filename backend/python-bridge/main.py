@@ -15,11 +15,22 @@ reader_lock = threading.Lock()
 LARAVEL_API_URL = "http://127.0.0.1:8000/api"
 CURRENT_SESSION_ID = None
 
-def send_tag_to_laravel(tag_data: Dict[str, Any]):
+_session_lock = threading.Lock()
+_current_session_id = None
+
+def set_session_id(sid: int) -> None:
+    global _current_session_id
+    with _session_lock:
+        _current_session_id = sid
+def get_session_id() -> Optional[int]:
+    with _session_lock:
+        return _current_session_id
+def send_tag_to_laravel(tag_data: Dict[str, Any]) -> None:
+    sid = get_session_id()
+    if sid is None:
+        print("No active session, dropping tag.")
+        return
     try:
-        if CURRENT_SESSION_ID:
-            tag_data["session_id"] = CURRENT_SESSION_ID
-        
         httpx.post(
             f"{LARAVEL_API_URL}/scans/ingest",
             json={"session_id": CURRENT_SESSION_ID, "tags": [tag_data]},
