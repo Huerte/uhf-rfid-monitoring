@@ -28,16 +28,20 @@ def get_session_id() -> Optional[int]:
 def send_tag_to_laravel(tag_data: Dict[str, Any]) -> None:
     sid = get_session_id()
     if sid is None:
-        print("No active session, dropping tag.")
+        # Bridge restarted mid-session or scan was never started via /scan/*/start.
+        # Fix: call POST /connect then POST /scan/epc/start from Laravel before scanning.
+        print(f"[WARN] No active session_id. Tag dropped: {tag_data}")
         return
     try:
-        httpx.post(
+        response = httpx.post(
             f"{LARAVEL_API_URL}/scans/ingest",
             json={"session_id": sid, "tags": [tag_data]},
             timeout=2.0
         )
+        if response.status_code >= 400:
+            print(f"[ERROR] Laravel rejected tag (HTTP {response.status_code}): {response.text}")
     except Exception as e:
-        print(f"Error sending tag to Laravel: {e}")
+        print(f"[ERROR] Could not reach Laravel at {LARAVEL_API_URL}: {e}")
 
 def received_epc(epc_info: LogBaseEpcInfo):
     if epc_info.result == 0:
@@ -48,6 +52,8 @@ def received_epc(epc_info: LogBaseEpcInfo):
             "rssi": epc_info.rssi,
             "antenna": epc_info.antId
         })
+    else:
+        print(f"[WARN] EPC read error from antenna (result={epc_info.result})")
 
 def received_6b(info: LogBase6bInfo):
     if info.result == 0:
@@ -57,6 +63,8 @@ def received_6b(info: LogBase6bInfo):
             "user_data": info.userData,
             "antenna": info.antId
         })
+    else:
+        print(f"[WARN] 6B read error from antenna (result={info.result})")
 
 def received_gb(info: LogBaseGbInfo):
     if info.result == 0:
@@ -66,6 +74,8 @@ def received_gb(info: LogBaseGbInfo):
             "tid": info.tid,
             "antenna": info.antId
         })
+    else:
+        print(f"[WARN] GB read error from antenna (result={info.result})")
 
 def received_over(over_info):
     pass

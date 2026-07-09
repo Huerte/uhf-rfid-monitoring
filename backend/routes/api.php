@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\IngestController;
 use App\Http\Controllers\ReaderController;
 use App\Http\Controllers\ScanController;
 use App\Http\Controllers\TagController;
@@ -15,6 +16,8 @@ Route::prefix('reader')->group(function () {
 Route::prefix('scans')->group(function () {
     Route::get('/',              [ScanController::class, 'index']);
     Route::post('/',             [ScanController::class, 'store']);
+    // Bridge ingest endpoint — called by python-bridge/main.py for every antenna read.
+    Route::post('/ingest',       [IngestController::class, 'store']);
     Route::get('/{scan}',        [ScanController::class, 'show']);
     Route::post('/{scan}/stop',  [ScanController::class, 'stop']);
     Route::delete('/{scan}',     [ScanController::class, 'destroy']);
