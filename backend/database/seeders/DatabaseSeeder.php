@@ -21,5 +21,19 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        $readers = \App\Models\Reader::factory(3)->create();
+
+        foreach ($readers as $reader) {
+            $sessions = \App\Models\ScanSession::factory(5)->create([
+                'reader_id' => $reader->id
+            ]);
+
+            foreach ($sessions as $session) {
+                \App\Models\Tag::factory(10)->create([
+                    'scan_session_id' => $session->id
+                ]);
+            }
+        }
     }
 }
