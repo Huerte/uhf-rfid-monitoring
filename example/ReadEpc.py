@@ -5,22 +5,32 @@ import os
 import urllib.request
 import json
 
-# This function triggers EVERY time a tag passes the antenna
+ACTIVE_ANTENNAS = [1, 2, 3, 4]
+COOLDOWN_SECONDS = 5
+
+SEEN_TAGS = {}
+
 def receivedEpc(epcInfo: LogBaseEpcInfo):
     if epcInfo.result == 0:
         tag_id = epcInfo.epc
+        current_time = time()
+        
+        if tag_id in SEEN_TAGS:
+            if (current_time - SEEN_TAGS[tag_id]) < COOLDOWN_SECONDS:
+                return
+                
+        SEEN_TAGS[tag_id] = current_time
+
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        print(f"[!] Scanned: {tag_id} at {timestamp}")
+        print(f"[!] Scanned: {tag_id} (Antenna: {epcInfo.antId}) at {timestamp}")
         
-        # 1. Save to CSV locally (Original Behavior)
         file_exists = os.path.isfile("scanned_tags.csv")
         with open("scanned_tags.csv", mode="a", encoding="utf-8") as f:
             if not file_exists:
                 f.write("Timestamp,Tag_ID\n")
             f.write(f"{timestamp},{tag_id}\n")
 
-        # 2. Push directly to Laravel Backend
         try:
             payload = json.dumps({
                 "protocol": "epc",
@@ -57,20 +67,25 @@ if __name__ == '__main__':
         g_client.callEpcInfo = receivedEpc
         g_client.callEpcOver = receivedEpcOver
 
-        # Start Reading
-        msg = MsgBaseInventoryEpc(antennaEnable=EnumG.AntennaNo_1.value,
+        antenna_mask = 0
+        for ant in ACTIVE_ANTENNAS:
+            if 1 <= ant <= 8:
+                antenna_mask |= (1 << (ant - 1))
+        
+        if antenna_mask == 0:
+            antenna_mask = 1
+
+        msg = MsgBaseInventoryEpc(antennaEnable=antenna_mask,
                                   inventoryMode=EnumG.InventoryMode_Inventory.value)
         if g_client.sendSynMsg(msg) == 0:
-            print("[*] Scan engine started successfully.")
+            print(f"[*] Scan engine started on Antennas: {ACTIVE_ANTENNAS}")
             print("[*] Keeping scanner alive for 1 hour. Press Ctrl+C to stop anytime.")
 
         try:
-            # Let it run for 1 hour (5 seconds) instead of cutting off immediately
-            sleep(3600)  # 1 hour in seconds
+            sleep(3600)
         except KeyboardInterrupt:
             print("\n[*] Stopping scanner manually...")
 
-        # Clean shutdown sequence
         stop = MsgBaseStop()
         if g_client.sendSynMsg(stop) == 0:
             print("[*] Scanning Stopped.")

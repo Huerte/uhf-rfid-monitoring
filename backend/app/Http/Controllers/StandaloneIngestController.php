@@ -10,10 +10,6 @@ use Illuminate\Http\Request;
 
 class StandaloneIngestController extends Controller
 {
-    /**
-     * Receives a single tag read directly from standalone Python scripts.
-     * Automatically handles creating dummy readers/sessions if the DB is empty.
-     */
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -24,7 +20,6 @@ class StandaloneIngestController extends Controller
             'antenna'  => 'nullable|integer',
         ]);
 
-        // Auto-create a dummy reader and session so foreign keys don't fail on an empty DB
         $reader = Reader::firstOrCreate(
             ['ip' => '127.0.0.1', 'port' => 0],
             ['connected' => true]
