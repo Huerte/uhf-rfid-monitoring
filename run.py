@@ -1,25 +1,28 @@
 import subprocess
 import json
-import os
+from pathlib import Path
 
-PID_FILE = "running_pids.json"
+BASE_DIR = Path(__file__).resolve().parent
 
-commands = [
-    "Get-Process | Sort-Object CPU -Descending | Select-Object -First 5",
-    "Get-Service | Where-Object {$_.Status -eq 'Running'}",
-    "Get-ChildItem C:\\ -Force",
-    "Get-Date",
+PID_FILE = BASE_DIR / "running_pids.json"
+
+jobs = [
+    {"cwd": BASE_DIR / "backend", "cmd": "npm run dev"},
+    {"cwd": BASE_DIR / "backend", "cmd": "php artisan reverb:start"},
+    {"cwd": BASE_DIR / "backend", "cmd": "php artisan serve --port=8000"},
+    {"cwd": BASE_DIR / "backend/python-bridge", "cmd": r".\venv\Scripts\activate; uvicorn main:app --port 8001"},
 ]
 
 pids = []
 
-for cmd in commands:
+for job in jobs:
     p = subprocess.Popen(
-        ["powershell", "-NoExit", "-Command", cmd],
+        ["powershell", "-NoExit", "-Command", job["cmd"]],
+        cwd=str(job["cwd"]),
         creationflags=subprocess.CREATE_NEW_CONSOLE
     )
     pids.append(p.pid)
-    print(f"Started PID {p.pid} -> {cmd}")
+    print(f"Started PID {p.pid} in {job['cwd']} -> {job['cmd']}")
 
 with open(PID_FILE, "w") as f:
     json.dump(pids, f)
