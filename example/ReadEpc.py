@@ -2,6 +2,8 @@ from uhf.reader import *
 from time import *
 from datetime import datetime
 import os
+import urllib.request
+import json
 
 # This function triggers EVERY time a tag passes the antenna
 def receivedEpc(epcInfo: LogBaseEpcInfo):
@@ -11,12 +13,31 @@ def receivedEpc(epcInfo: LogBaseEpcInfo):
         
         print(f"[!] Scanned: {tag_id} at {timestamp}")
         
-        # Open and write to a CSV file automatically
+        # 1. Save to CSV locally (Original Behavior)
         file_exists = os.path.isfile("scanned_tags.csv")
         with open("scanned_tags.csv", mode="a", encoding="utf-8") as f:
             if not file_exists:
-                f.write("Timestamp,Tag_ID\n")  # Create headers if new file
+                f.write("Timestamp,Tag_ID\n")
             f.write(f"{timestamp},{tag_id}\n")
+
+        # 2. Push directly to Laravel Backend
+        try:
+            payload = json.dumps({
+                "protocol": "epc",
+                "epc": epcInfo.epc,
+                "tid": epcInfo.tid,
+                "rssi": epcInfo.rssi,
+                "antenna": epcInfo.antId
+            }).encode('utf-8')
+
+            req = urllib.request.Request(
+                "http://127.0.0.1:8000/api/scans/standalone-ingest", 
+                data=payload, 
+                headers={'Content-Type': 'application/json'}
+            )
+            urllib.request.urlopen(req, timeout=2.0)
+        except Exception as e:
+            print(f"[!] Failed to send tag {tag_id} to Laravel: {e}")
 
 def receivedEpcOver(epcOver: LogBaseEpcOver):
     print("--- Batch Scan Cycle Ended ---")

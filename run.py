@@ -10,7 +10,7 @@ jobs = [
     {"cwd": BASE_DIR / "backend", "cmd": "npm run dev"},
     {"cwd": BASE_DIR / "backend", "cmd": "php artisan reverb:start"},
     {"cwd": BASE_DIR / "backend", "cmd": "php artisan serve --port=8000"},
-    {"cwd": BASE_DIR / "backend/python-bridge", "cmd": r".\venv\Scripts\activate; uvicorn main:app --port 8001"},
+    {"cwd": BASE_DIR / "example", "cmd": "python ReadEpc.py"},
 ]
 
 pids = []
