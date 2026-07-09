@@ -145,29 +145,12 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($stats['recent_tags'] as $index => $tag)
-                <tr class="{{ $index === 0 ? 'selected-row' : '' }}">
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ strtolower($tag->protocol) }}</td>
-                    <td>{{ $tag->epc }}</td>
-                    <td>{{ $tag->tid }}</td>
-                    <td>{{ $tag->user_data }}</td>
-                    <td></td>
-                    <td>2</td>
-                    <td>1</td>
-                    <td>{{ $tag->antenna == 1 ? '1' : '0' }}</td>
-                    <td>{{ $tag->antenna == 2 ? '1' : '0' }}</td>
-                    <td>{{ $tag->antenna == 3 ? '1' : '0' }}</td>
-                    <td>{{ $tag->antenna == 4 ? '1' : '0' }}</td>
-                    <td>{{ $tag->rssi }}</td>
-                </tr>
-                @endforeach
             </tbody>
         </table>
     </div>
 
     <script type="module">
-        let rowCount = {{ count($stats['recent_tags']) }};
+        let rowCount = 0;
         const tableBody = document.querySelector('#tags-table tbody');
 
         // Function to handle row selection highlighting
@@ -272,51 +255,58 @@
             }
         });
 
-        setTimeout(() => {
-            if (window.Echo) {
-                window.Echo.channel('rfid.live')
-                    .listen('.tag.scanned', (e) => {
-                        if (isPaused) return;
-
-                        rowCount++;
-                        
-                        const row = document.createElement('tr');
-                        
-                        row.innerHTML = `
-                            <td>${rowCount}</td>
-                            <td>${(e.protocol || '').toLowerCase()}</td>
-                            <td>${e.epc || ''}</td>
-                            <td>${e.tid || ''}</td>
-                            <td>${e.user_data || ''}</td>
-                            <td></td>
-                            <td>2</td>
-                            <td>1</td>
-                            <td>${e.antenna == 1 ? '1' : '0'}</td>
-                            <td>${e.antenna == 2 ? '1' : '0'}</td>
-                            <td>${e.antenna == 3 ? '1' : '0'}</td>
-                            <td>${e.antenna == 4 ? '1' : '0'}</td>
-                            <td>${e.rssi || ''}</td>
-                        `;
-
-                        // Apply current filter to new row
-                        const term = searchInput.value.toLowerCase();
-                        if(term && !row.innerText.toLowerCase().includes(term)) {
-                            row.style.display = 'none';
-                        }
-                        
-                        // Insert at the top
-                        tableBody.insertBefore(row, tableBody.firstChild);
-                        
-                        // Keep only recent 100 tags in DOM to match desktop performance
-                        if (tableBody.children.length > 100) {
-                            tableBody.removeChild(tableBody.lastChild);
-                        }
-
-                        // Maintain the blue highlight on the very first row
-                        updateSelection();
-                    });
+        function subscribeToRfid() {
+            if (!window.Echo) {
+                console.error('[RFID] window.Echo is not available.');
+                return;
             }
-        }, 1000);
+
+            window.Echo.channel('rfid.live')
+                .listen('.tag.scanned', (e) => {
+                    if (isPaused) return;
+
+                    rowCount++;
+
+                    const row = document.createElement('tr');
+
+                    row.innerHTML = `
+                        <td>${rowCount}</td>
+                        <td>${(e.protocol || '').toLowerCase()}</td>
+                        <td>${e.epc || ''}</td>
+                        <td>${e.tid || ''}</td>
+                        <td>${e.user_data || ''}</td>
+                        <td></td>
+                        <td>2</td>
+                        <td>1</td>
+                        <td>${e.antenna == 1 ? '1' : '0'}</td>
+                        <td>${e.antenna == 2 ? '1' : '0'}</td>
+                        <td>${e.antenna == 3 ? '1' : '0'}</td>
+                        <td>${e.antenna == 4 ? '1' : '0'}</td>
+                        <td>${e.rssi || ''}</td>
+                    `;
+
+                    const term = searchInput.value.toLowerCase();
+                    if (term && !row.innerText.toLowerCase().includes(term)) {
+                        row.style.display = 'none';
+                    }
+
+                    tableBody.insertBefore(row, tableBody.firstChild);
+
+                    if (tableBody.children.length > 100) {
+                        tableBody.removeChild(tableBody.lastChild);
+                    }
+
+                    updateSelection();
+                });
+
+            console.log('[RFID] Subscribed to rfid.live channel.');
+        }
+
+        if (window.Echo) {
+            subscribeToRfid();
+        } else {
+            window.addEventListener('echo:ready', subscribeToRfid, { once: true });
+        }
     </script>
 </body>
 </html>
