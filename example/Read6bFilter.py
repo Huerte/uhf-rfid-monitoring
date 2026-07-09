@@ -20,31 +20,33 @@ if __name__ == '__main__':
         g_client.call6bInfo = received6b
         g_client.call6bOver = received6bOver
 
-        antenna_mask = 0
-        for ant in ACTIVE_ANTENNAS:
-            if 1 <= ant <= 8:
-                antenna_mask |= (1 << (ant - 1))
-        
-        if antenna_mask == 0:
-            antenna_mask = 1
+        print(f"[*] Starting round-robin scan on Antennas: {ACTIVE_ANTENNAS}")
+        try:
+            while True:
+                for ant in ACTIVE_ANTENNAS:
+                    try:
+                        ant_enum_val = getattr(EnumG, f"AntennaNo_{ant}").value
+                    except AttributeError:
+                        continue
 
-        msg = MsgBaseInventory6b(antennaEnable=antenna_mask,
-                                 inventoryMode=EnumG.InventoryMode_Inventory.value,
-                                 area=EnumG.ReadMode6b_TidAndUserData.value)
-        userData = Param6bReadUserData(start=0, dataLen=10)
-        msg.readUserData = userData
+                    msg = MsgBaseInventory6b(antennaEnable=ant_enum_val,
+                                             inventoryMode=EnumG.InventoryMode_Inventory.value,
+                                             area=EnumG.ReadMode6b_TidAndUserData.value)
+                    
+                    userData = Param6bReadUserData(start=0, dataLen=10)
+                    msg.readUserData = userData
+                    
+                    if g_client.sendSynMsg(msg) == 0:
+                        sleep(0.5)
+                        stop = MsgBaseStop()
+                        g_client.sendSynMsg(stop)
+                    else:
+                        sleep(0.5)
 
-        # msg.hexMatchTid("E0040000B6B3E808")
-
-        if g_client.sendSynMsg(msg) == 0:
-            print(msg.rtMsg)
-        else:
-            print(msg.rtMsg)
-
-        sleep(5)
+        except KeyboardInterrupt:
+            pass
 
         stop = MsgBaseStop()
-        if g_client.sendSynMsg(stop) == 0:
-            print(stop.rtMsg)
+        g_client.sendSynMsg(stop)
 
         g_client.close()

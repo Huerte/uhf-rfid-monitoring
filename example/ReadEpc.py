@@ -67,27 +67,37 @@ if __name__ == '__main__':
         g_client.callEpcInfo = receivedEpc
         g_client.callEpcOver = receivedEpcOver
 
-        antenna_mask = 0
-        for ant in ACTIVE_ANTENNAS:
-            if 1 <= ant <= 8:
-                antenna_mask |= (1 << (ant - 1))
-        
-        if antenna_mask == 0:
-            antenna_mask = 1
-
-        msg = MsgBaseInventoryEpc(antennaEnable=antenna_mask,
-                                  inventoryMode=EnumG.InventoryMode_Inventory.value)
-        if g_client.sendSynMsg(msg) == 0:
-            print(f"[*] Scan engine started on Antennas: {ACTIVE_ANTENNAS}")
-            print("[*] Keeping scanner alive for 1 hour. Press Ctrl+C to stop anytime.")
+        print(f"[*] Starting round-robin scan on Antennas: {ACTIVE_ANTENNAS}")
+        print("[*] Press Ctrl+C to stop anytime.")
 
         try:
-            sleep(3600)
+            while True:
+                for ant in ACTIVE_ANTENNAS:
+                    try:
+                        # Dynamically grab EnumG.AntennaNo_1, AntennaNo_2, etc.
+                        ant_enum_val = getattr(EnumG, f"AntennaNo_{ant}").value
+                    except AttributeError:
+                        print(f"[!] Invalid Antenna ID configured: {ant}. Skipping.")
+                        continue
+
+                    msg = MsgBaseInventoryEpc(antennaEnable=ant_enum_val,
+                                              inventoryMode=EnumG.InventoryMode_Inventory.value)
+                    
+                    if g_client.sendSynMsg(msg) == 0:
+                        # Let the hardware scan this specific antenna for 500ms
+                        sleep(0.5)
+                        
+                        # Stop the scan before switching to the next antenna
+                        stop = MsgBaseStop()
+                        g_client.sendSynMsg(stop)
+                    else:
+                        print(f"[!] Hardware failed to start Antenna {ant}")
+                        sleep(0.5)
+
         except KeyboardInterrupt:
             print("\n[*] Stopping scanner manually...")
 
         stop = MsgBaseStop()
-        if g_client.sendSynMsg(stop) == 0:
-            print("[*] Scanning Stopped.")
+        g_client.sendSynMsg(stop)
 
         g_client.close()
