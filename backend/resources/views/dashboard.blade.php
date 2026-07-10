@@ -139,7 +139,7 @@
             padding: 4px 6px;
             border-right: 1px solid #D4D4D4;
             border-bottom: 1px solid #D4D4D4;
-            background-color: #316d9bff;
+            background-color: #417ac0ff;
             color: #ffffffff;
             white-space: nowrap;
             overflow: hidden;
@@ -165,7 +165,7 @@
         .grid-table th:first-child, .grid-table td:first-child {
             width: 40px;
             text-align: center;
-            background-color: #316d9bff;
+            background-color: #417ac0ff;
             border-right: 1px solid #D4D4D4;
             position: relative;
         }
@@ -173,10 +173,10 @@
         /* Selected row styling (classic windows blue) */
         .selected-row td {
             background-color: #ffffffff !important;
-            color: Black !important;
+            color: black !important;
         }
         .selected-row td:first-child {
-            background-color: #0078D7 !important;
+            background-color: #497bd1ff !important;
             color: black !important;
         }
 
@@ -191,15 +191,15 @@
         }
 
         /* Proportional column widths */
-        .col-type { width: 5%; }
-        .col-epc { width: 25%; }
-        .col-tid { width: 20%; }
-        .col-userdata { width: 12%; }
-        .col-reserved { width: 10%; }
-        .col-epcbank { width: 6%; }
-        .col-total { width: 6%; }
-        .col-ant { width: 4%; }
-        .col-rssi { width: 5%; }
+        .col-type { width: 11%; }
+        .col-epc { width: 11%; }
+        .col-tid { width: 11%; }
+        .col-userdata { width: 11%; }
+        .col-reserved { width: 11%; }
+        .col-epcbank { width: 11%; }
+        .col-total { width: 11%; }
+        .col-ant { width: 11%; }
+        .col-rssi { width: 11; }
         
         .table-container {
             background-color: white;
@@ -242,6 +242,10 @@
                 <tr>
                     <th class="col-Number">No.</th>
                     <th class="col-type">Type</th>
+                    <th class="col-epc">EPC</th>
+                    <th class="col-tid">TID</th>
+                    <th class="col-userdata">Userdata</th>
+                    <th class="col-reserved">Reservedata</th>
                     <th class="col-epcbank">EPCBank</th>
                     <th class="col-total">Totalcount</th>
                     <th class="col-ant">Ant1</th>
