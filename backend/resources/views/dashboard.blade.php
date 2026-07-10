@@ -129,7 +129,7 @@
         <table class="grid-table" id="tags-table">
             <thead>
                 <tr>
-                    <th></th>
+                    <th class="col-Number">No.</th>
                     <th class="col-type">Type</th>
                     <th class="col-epc">EPC</th>
                     <th class="col-epcbank">EPCBank</th>
