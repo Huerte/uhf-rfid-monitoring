@@ -199,7 +199,7 @@
         .col-epcbank { width: 11%; }
         .col-total { width: 11%; }
         .col-ant { width: 11%; }
-        .col-rssi { width: 11; }
+        .col-rssi { width: 11%; }
         
         .table-container {
             background-color: white;
@@ -363,37 +363,61 @@
                 return;
             }
 
+            const rowMap = new Map();
+
             window.Echo.channel('rfid.live')
                 .listen('.tag.scanned', (e) => {
-                    rowCount++;
+                    const epc = e.epc || '';
 
-                    const row = document.createElement('tr');
+                    if (rowMap.has(epc)) {
+                        const row = rowMap.get(epc);
+                        const cells = row.querySelectorAll('td');
+                        
+                        cells[8].textContent  = e.ant1 ?? 0;
+                        cells[9].textContent  = e.ant2 ?? 0;
+                        cells[10].textContent = e.ant3 ?? 0;
+                        cells[11].textContent = e.ant4 ?? 0;
+                        cells[7].textContent  = (e.ant1 ?? 0) + (e.ant2 ?? 0) + (e.ant3 ?? 0) + (e.ant4 ?? 0);
+                        cells[12].textContent = e.rssi ?? '';
 
-                    row.innerHTML = `
-                        <td>${rowCount}</td>
-                        <td>${(e.protocol || '').toLowerCase()}</td>
-                        <td>${e.epc || ''}</td>
-                        <td>${e.tid || ''}</td>
-                        <td>${e.user_data || ''}</td>
-                        <td></td>
-                        <td>2</td>
-                        <td>1</td>
-                        <td>${e.antenna == 1 ? '1' : '0'}</td>
-                        <td>${e.antenna == 2 ? '1' : '0'}</td>
-                        <td>${e.antenna == 3 ? '1' : '0'}</td>
-                        <td>${e.antenna == 4 ? '1' : '0'}</td>
-                        <td>${e.rssi || ''}</td>
-                    `;
+                        row.style.backgroundColor = '#fef9c3';
+                        setTimeout(() => { row.style.backgroundColor = ''; }, 400);
 
-                    const term = searchInput.value.toLowerCase();
-                    if (term && !row.innerText.toLowerCase().includes(term)) {
-                        row.style.display = 'none';
-                    }
+                        tableBody.insertBefore(row, tableBody.firstChild);
+                    } else {
+                        rowCount++;
+                        const totalCount = (e.ant1 ?? 0) + (e.ant2 ?? 0) + (e.ant3 ?? 0) + (e.ant4 ?? 0);
 
-                    tableBody.insertBefore(row, tableBody.firstChild);
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${rowCount}</td>
+                            <td>${(e.protocol || '').toLowerCase()}</td>
+                            <td>${epc}</td>
+                            <td>${e.tid || ''}</td>
+                            <td>${e.user_data || ''}</td>
+                            <td></td>
+                            <td></td>
+                            <td>${totalCount}</td>
+                            <td>${e.ant1 ?? 0}</td>
+                            <td>${e.ant2 ?? 0}</td>
+                            <td>${e.ant3 ?? 0}</td>
+                            <td>${e.ant4 ?? 0}</td>
+                            <td>${e.rssi || ''}</td>
+                        `;
 
-                    if (tableBody.children.length > 100) {
-                        tableBody.removeChild(tableBody.lastChild);
+                        const term = searchInput.value.toLowerCase();
+                        if (term && !row.innerText.toLowerCase().includes(term)) {
+                            row.style.display = 'none';
+                        }
+
+                        tableBody.insertBefore(row, tableBody.firstChild);
+                        rowMap.set(epc, row);
+
+                        if (tableBody.children.length > 100) {
+                            const removed = tableBody.lastChild;
+                            rowMap.forEach((v, k) => { if (v === removed) rowMap.delete(k); });
+                            tableBody.removeChild(removed);
+                        }
                     }
 
                     updateCounters();
