@@ -172,7 +172,7 @@
 
         /* Selected row styling (classic windows blue) */
         .selected-row td {
-            background-color: #ffffffff !important;
+            background-color: #ffffffff !important; 
             color: black !important;
         }
         .selected-row td:first-child {
