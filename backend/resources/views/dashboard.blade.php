@@ -275,7 +275,7 @@
                         <td></td>
                         <td>2</td>
                         <td>1</td>
-                        <td>${e.antenna == 1 ? '1' : '0'}</td>
+                        <td>${e.antenna == 1 ? '1' : '0'}</td> 
                         <td>${e.antenna == 2 ? '1' : '0'}</td>
                         <td>${e.antenna == 3 ? '1' : '0'}</td>
                         <td>${e.antenna == 4 ? '1' : '0'}</td>
