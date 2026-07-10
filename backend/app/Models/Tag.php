@@ -13,6 +13,7 @@ class Tag extends Model
     protected $fillable = [
         'scan_session_id', 'protocol', 'epc', 'tid',
         'user_data', 'antenna', 'rssi', 'scanned_at',
+        'ant1', 'ant2', 'ant3', 'ant4',
     ];
 
     protected $casts = [
