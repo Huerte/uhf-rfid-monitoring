@@ -16,6 +16,114 @@
             display: flex;
             flex-direction: column;
         }
+
+        /* ── Header: title row ── */
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px 4px 10px;
+            background: #F0F0F0;
+            border-bottom: 1px solid #CECECE;
+        }
+        .header-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        .tag-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 8px;
+            background: #E1EFFE;
+            color: #1a56db;
+            border: 1px solid #C3D9FB;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* ── Toolbar: action row ── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: #F7F7F7;
+            border-bottom: 1px solid #DCDCDC;
+        }
+
+        .toolbar-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            font-size: 12px;
+            font-family: "Segoe UI", sans-serif;
+            background: #fff;
+            border: 1px solid #C8C8C8;
+            border-radius: 3px;
+            cursor: pointer;
+            color: #333;
+            transition: background 0.1s, border-color 0.1s;
+            white-space: nowrap;
+        }
+        .toolbar-btn:hover {
+            background: #EBF3FF;
+            border-color: #7EB4EA;
+        }
+        .toolbar-btn:active {
+            background: #D6E9FF;
+        }
+        .toolbar-btn svg {
+            width: 12px;
+            height: 12px;
+            color: #555;
+            flex-shrink: 0;
+        }
+
+        .toolbar-sep {
+            width: 1px;
+            height: 18px;
+            background: #D4D4D4;
+            margin: 0 4px;
+        }
+
+        /* Search */
+        .search-wrap {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .search-wrap svg {
+            position: absolute;
+            left: 6px;
+            width: 12px;
+            height: 12px;
+            color: #999;
+        }
+        .search-input {
+            padding: 3px 6px 3px 22px;
+            font-size: 12px;
+            font-family: "Segoe UI", sans-serif;
+            border: 1px solid #C8C8C8;
+            border-radius: 3px;
+            width: 210px;
+            background: #fff;
+            color: #111;
+            outline: none;
+        }
+        .search-input:focus {
+            border-color: #7EB4EA;
+            box-shadow: 0 0 0 2px #BDD8F522;
+        }
+
+        .showing-label {
+            font-size: 11px;
+            color: #555;
+            white-space: nowrap;
+        }
+        .showing-label b { color: #111; font-weight: 600; }
         
         .grid-table {
             width: 100%;
@@ -41,8 +149,6 @@
             z-index: 10;
             box-shadow: 0 1px 0 #D4D4D4;
         }
-
-
 
         .grid-table td {
             padding: 2px 6px;
@@ -85,15 +191,15 @@
         }
 
         /* Proportional column widths */
-        .col-type { width: 50%; }
-        .col-epc { width: 50%; }
+        .col-type { width: 5%; }
+        .col-epc { width: 25%; }
         .col-tid { width: 20%; }
         .col-userdata { width: 12%; }
         .col-reserved { width: 10%; }
-        .col-epcbank { width: 50%; }
-        .col-total { width: 60%; }
-        .col-ant { width: 40%; }
-        .col-rssi { width: 50%; }
+        .col-epcbank { width: 6%; }
+        .col-total { width: 6%; }
+        .col-ant { width: 4%; }
+        .col-rssi { width: 5%; }
         
         .table-container {
             background-color: white;
@@ -105,33 +211,37 @@
     </style>
 </head>
 <body>
-    <div class="flex items-center gap-3 p-3 bg-[#F0F0F0] border-b border-[#A0A0A0] shadow-sm">
-        <button id="btn-pause" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span id="pause-text">Pause Stream</span>
-        </button>
-        <button id="btn-export" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 border border-blue-700 rounded shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all">
-            <svg class="w-4 h-4 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            <span>Export to CSV</span>
-        </button>
-        <div class="h-6 w-px bg-gray-300 mx-2"></div>
-        <button id="btn-clear" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            <span>Clear Table</span>
-        </button>
-        <div class="flex-1"></div>
-        <div class="relative flex items-center">
-            <svg class="w-4 h-4 text-gray-400 absolute left-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            <input type="text" id="search-input" placeholder="Search EPC/TID..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 shadow-sm text-gray-700">
-        </div>
+    <!-- Title row -->
+    <div class="header-title-row">
+        <span class="header-title">RFID Tag Reader</span>
+        <span class="tag-badge" id="tag-badge">0 tags</span>
     </div>
+
+    <!-- Action row -->
+    <div class="toolbar">
+        <div class="search-wrap">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="search-input" class="search-input" placeholder="Search EPC, antenna, RSSI...">
+        </div>
+        <div class="toolbar-sep"></div>
+        <button id="btn-export" class="toolbar-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Export CSV
+        </button>
+        <button id="btn-clear" class="toolbar-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18v3"/></svg>
+            Refresh
+        </button>
+        <div style="flex:1"></div>
+        <span class="showing-label">Showing <b id="sb-showing">0</b> of <b id="sb-total">0</b></span>
+    </div>
+
     <div class="table-container">
         <table class="grid-table" id="tags-table">
             <thead>
                 <tr>
                     <th class="col-Number">No.</th>
                     <th class="col-type">Type</th>
-                    <th class="col-epc">EPC</th>
                     <th class="col-epcbank">EPCBank</th>
                     <th class="col-total">Totalcount</th>
                     <th class="col-ant">Ant1</th>
@@ -162,25 +272,16 @@
             });
         }
 
-        let isPaused = false;
-        const pauseBtn = document.getElementById('btn-pause');
-        const pauseText = document.getElementById('pause-text');
         const exportBtn = document.getElementById('btn-export');
+        const clearBtn = document.getElementById('btn-clear');
+        const searchInput = document.getElementById('search-input');
 
-        pauseBtn.addEventListener('click', () => {
-            isPaused = !isPaused;
-            pauseText.innerText = isPaused ? 'Resume Stream' : 'Pause Stream';
-            
-            if(isPaused) {
-                pauseBtn.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
-                pauseBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
-                pauseBtn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-300');
-            } else {
-                pauseBtn.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
-                pauseBtn.classList.remove('bg-blue-50', 'text-blue-700', 'border-blue-300');
-                pauseBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
-            }
-        });
+        function updateCounters() {
+            const visible = tableBody.querySelectorAll('tr:not([style*="display: none"])').length;
+            document.getElementById('sb-showing').textContent = visible;
+            document.getElementById('sb-total').textContent   = rowCount;
+            document.getElementById('tag-badge').textContent  = rowCount + (rowCount === 1 ? ' tag' : ' tags');
+        }
 
         exportBtn.addEventListener('click', () => {
             let csv = [];
@@ -209,15 +310,14 @@
             document.body.removeChild(downloadLink);
         });
 
-        // Clear button logic
-        const clearBtn = document.getElementById('btn-clear');
+        // Clear button logic (Refresh)
         clearBtn.addEventListener('click', () => {
             tableBody.innerHTML = '';
             rowCount = 0;
+            updateCounters();
         });
 
         // Search logic
-        const searchInput = document.getElementById('search-input');
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const rows = tableBody.querySelectorAll('tr');
@@ -229,6 +329,7 @@
                     row.style.display = 'none';
                 }
             });
+            updateCounters();
         });
 
         // Click to copy logic
@@ -260,8 +361,6 @@
 
             window.Echo.channel('rfid.live')
                 .listen('.tag.scanned', (e) => {
-                    if (isPaused) return;
-
                     rowCount++;
 
                     const row = document.createElement('tr');
@@ -275,7 +374,7 @@
                         <td></td>
                         <td>2</td>
                         <td>1</td>
-                        <td>${e.antenna == 1 ? '1' : '0'}</td> 
+                        <td>${e.antenna == 1 ? '1' : '0'}</td>
                         <td>${e.antenna == 2 ? '1' : '0'}</td>
                         <td>${e.antenna == 3 ? '1' : '0'}</td>
                         <td>${e.antenna == 4 ? '1' : '0'}</td>
@@ -293,6 +392,7 @@
                         tableBody.removeChild(tableBody.lastChild);
                     }
 
+                    updateCounters();
                     updateSelection();
                 });
 
