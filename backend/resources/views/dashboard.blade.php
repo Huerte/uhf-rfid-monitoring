@@ -85,15 +85,15 @@
         }
 
         /* Proportional column widths */
-        .col-type { width: 5%; }
-        .col-epc { width: 25%; }
+        .col-type { width: 50%; }
+        .col-epc { width: 50%; }
         .col-tid { width: 20%; }
         .col-userdata { width: 12%; }
         .col-reserved { width: 10%; }
-        .col-epcbank { width: 6%; }
-        .col-total { width: 6%; }
-        .col-ant { width: 4%; }
-        .col-rssi { width: 5%; }
+        .col-epcbank { width: 50%; }
+        .col-total { width: 60%; }
+        .col-ant { width: 40%; }
+        .col-rssi { width: 50%; }
         
         .table-container {
             background-color: white;
@@ -132,9 +132,6 @@
                     <th></th>
                     <th class="col-type">Type</th>
                     <th class="col-epc">EPC</th>
-                    <th class="col-tid">TID</th>
-                    <th class="col-userdata">Userdata</th>
-                    <th class="col-reserved">Reservedata</th>
                     <th class="col-epcbank">EPCBank</th>
                     <th class="col-total">Totalcount</th>
                     <th class="col-ant">Ant1</th>
