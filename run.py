@@ -1,6 +1,7 @@
 import subprocess
 import json
 from pathlib import Path
+import webbrowser
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -23,6 +24,10 @@ for job in jobs:
     )
     pids.append(p.pid)
     print(f"Started PID {p.pid} in {job['cwd']} -> {job['cmd']}")
+
+import time
+time.sleep(7)
+webbrowser.open("http://127.0.0.1:8000/")
 
 with open(PID_FILE, "w") as f:
     json.dump(pids, f)
