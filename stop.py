@@ -19,4 +19,4 @@ for pid in pids:
         print(f"PID {pid} not found or already stopped")
 
 os.remove(PID_FILE)
-print("Cleared PID file.") 
+print("Cleared PID file.")  
