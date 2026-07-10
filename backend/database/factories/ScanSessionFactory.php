@@ -12,17 +12,19 @@ class ScanSessionFactory extends Factory
 
     public function definition(): array
     {
-        $status = $this->faker->randomElement(['running', 'stopped', 'error']);
+        $statuses = ['running', 'stopped', 'error'];
+        $protocols = ['epc', '6b', 'gb'];
+        $status = $statuses[array_rand($statuses)];
         return [
             'reader_id' => Reader::factory(),
-            'protocol' => $this->faker->randomElement(['epc', '6b', 'gb']),
-            'antenna' => $this->faker->numberBetween(1, 4),
-            'read_tid' => $this->faker->boolean(),
-            'read_user_data' => $this->faker->boolean(),
+            'protocol' => $protocols[array_rand($protocols)],
+            'antenna' => rand(1, 4),
+            'read_tid' => (bool) rand(0, 1),
+            'read_user_data' => (bool) rand(0, 1),
             'status' => $status,
             'error_message' => $status === 'error' ? 'Connection lost' : null,
-            'started_at' => $this->faker->dateTimeThisMonth(),
-            'ended_at' => $status !== 'running' ? clone $this->faker->dateTimeThisMonth() : null,
+            'started_at' => now()->subDays(rand(0, 30)),
+            'ended_at' => $status !== 'running' ? now()->subDays(rand(0, 29)) : null,
         ];
     }
 }
