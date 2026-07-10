@@ -163,7 +163,7 @@
 
         /* The row number column */
         .grid-table th:first-child, .grid-table td:first-child {
-            width: 40px;
+            width: 2.5%;
             text-align: center;
             background-color: #417ac0ff; 
             border-right: 1px solid #D4D4D4;
@@ -190,16 +190,18 @@
             line-height: 18px;
         }
 
-        /* Proportional column widths */
-        .col-type { width: 11%; }
-        .col-epc { width: 11%; }
-        .col-tid { width: 11%; }
-        .col-userdata { width: 11%; }
-        .col-reserved { width: 11%; }
-        .col-epcbank { width: 11%; }
-        .col-total { width: 11%; }
-        .col-ant { width: 11%; }
-        .col-rssi { width: 11%; }
+        /* Row number column — fixed narrow width */
+        .col-Number   { width: 2.5%; }
+
+        /* Proportional column widths — EPC is wider, all others equal */
+        .col-epc      { width: 22%; }
+        .col-type,
+        .col-tid,
+        .col-userdata,
+        .col-reserved,
+        .col-epcbank,
+        .col-ant,
+        .col-rssi     { width: 7%; }
         
         .table-container {
             background-color: white;
@@ -244,15 +246,14 @@
                     <th class="col-type">Type</th>
                     <th class="col-epc">EPC</th>
                     <th class="col-tid">TID</th>
-                    <th class="col-userdata">Userdata</th>
-                    <th class="col-reserved">Reservedata</th>
-                    <th class="col-epcbank">EPCBank</th>
-                    <th class="col-total">Totalcount</th>
+                    <th class="col-userdata">User Data</th>
+                    <th class="col-reserved">Reserve Data</th>
+                    <th class="col-epcbank">EPC Bank</th>
                     <th class="col-ant">Ant1</th>
                     <th class="col-ant">Ant2</th>
                     <th class="col-ant">Ant3</th>
                     <th class="col-ant">Ant4</th>
-                    <th class="col-rssi">Rssi</th>
+                    <th class="col-rssi">RSSI</th>
                 </tr>
             </thead>
             <tbody>
@@ -380,8 +381,20 @@
                         cells[7].textContent  = (e.ant1 ?? 0) + (e.ant2 ?? 0) + (e.ant3 ?? 0) + (e.ant4 ?? 0);
                         cells[12].textContent = e.rssi ?? '';
 
-                        row.style.backgroundColor = '#fef9c3';
-                        setTimeout(() => { row.style.backgroundColor = ''; }, 400);
+                    row.innerHTML = `
+                        <td>${rowCount}</td>
+                        <td>${(e.protocol || '').toLowerCase()}</td>
+                        <td>${e.epc || ''}</td>
+                        <td>${e.tid || ''}</td>
+                        <td>${e.user_data || ''}</td>
+                        <td>${e.reserve_data || ''}</td>
+                        <td>${e.epc_bank || ''}</td>
+                        <td>${e.antenna == 1 ? '1' : '0'}</td>
+                        <td>${e.antenna == 2 ? '1' : '0'}</td>
+                        <td>${e.antenna == 3 ? '1' : '0'}</td>
+                        <td>${e.antenna == 4 ? '1' : '0'}</td>
+                        <td>${e.rssi || ''}</td>
+                    `;
 
                         tableBody.insertBefore(row, tableBody.firstChild);
                     } else {
