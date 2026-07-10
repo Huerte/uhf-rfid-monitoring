@@ -31,8 +31,8 @@
             padding: 4px 6px;
             border-right: 1px solid #D4D4D4;
             border-bottom: 1px solid #D4D4D4;
-            background-color: #FFFFFF;
-            color: #000;
+            background-color: #316d9bff;
+            color: #ffffffff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -59,18 +59,18 @@
         .grid-table th:first-child, .grid-table td:first-child {
             width: 40px;
             text-align: center;
-            background-color: #F0F0F0;
+            background-color: #316d9bff;
             border-right: 1px solid #D4D4D4;
             position: relative;
         }
 
         /* Selected row styling (classic windows blue) */
         .selected-row td {
-            background-color: #0078D7 !important;
-            color: white !important;
+            background-color: #ffffffff !important;
+            color: Black !important;
         }
         .selected-row td:first-child {
-            background-color: #F0F0F0 !important;
+            background-color: #0078D7 !important;
             color: black !important;
         }
 
