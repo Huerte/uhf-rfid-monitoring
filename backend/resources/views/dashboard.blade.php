@@ -198,10 +198,8 @@
         .col-type,
         .col-tid,
         .col-userdata,
-        .col-reserved,
-        .col-epcbank,
         .col-ant,
-        .col-rssi     { width: 7%; }
+        .col-rssi     { width: 9%; }
         
         .table-container {
             background-color: white;
@@ -232,7 +230,7 @@
         </button>
         <button id="btn-clear" class="toolbar-btn">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18v3"/></svg>
-            Refresh
+            Clear Data
         </button>
         <div style="flex:1"></div>
         <span class="showing-label">Showing <b id="sb-showing">0</b> of <b id="sb-total">0</b></span>
@@ -247,8 +245,6 @@
                     <th class="col-epc">EPC</th>
                     <th class="col-tid">TID</th>
                     <th class="col-userdata">User Data</th>
-                    <th class="col-reserved">Reserve Data</th>
-                    <th class="col-epcbank">EPC Bank</th>
                     <th class="col-ant">Ant1</th>
                     <th class="col-ant">Ant2</th>
                     <th class="col-ant">Ant3</th>
@@ -358,6 +354,39 @@
             }
         });
 
+        async function loadExistingTags() {
+            try {
+                const response = await fetch('/api/tags');
+                const data = await response.json();
+                
+                if (data.data) {
+                    data.data.forEach(tag => {
+                        rowCount++;
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${rowCount}</td>
+                            <td>${(tag.protocol || '').toLowerCase()}</td>
+                            <td>${tag.epc || ''}</td>
+                            <td>${tag.tid || ''}</td>
+                            <td>${tag.user_data || ''}</td>
+                            <td>${tag.ant1 ?? 0}</td>
+                            <td>${tag.ant2 ?? 0}</td>
+                            <td>${tag.ant3 ?? 0}</td>
+                            <td>${tag.ant4 ?? 0}</td>
+                            <td>${tag.rssi || ''}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    updateCounters();
+                    updateSelection();
+                }
+            } catch (error) {
+                console.error('[RFID] Failed to load existing tags:', error);
+            }
+        }
+
+        loadExistingTags();
+
         function subscribeToRfid() {
             if (!window.Echo) {
                 console.error('[RFID] window.Echo is not available.');
@@ -374,32 +403,18 @@
                         const row = rowMap.get(epc);
                         const cells = row.querySelectorAll('td');
                         
-                        cells[8].textContent  = e.ant1 ?? 0;
-                        cells[9].textContent  = e.ant2 ?? 0;
-                        cells[10].textContent = e.ant3 ?? 0;
-                        cells[11].textContent = e.ant4 ?? 0;
-                        cells[7].textContent  = (e.ant1 ?? 0) + (e.ant2 ?? 0) + (e.ant3 ?? 0) + (e.ant4 ?? 0);
-                        cells[12].textContent = e.rssi ?? '';
+                        cells[5].textContent  = e.ant1 ?? 0;
+                        cells[6].textContent  = e.ant2 ?? 0;
+                        cells[7].textContent  = e.ant3 ?? 0;
+                        cells[8].textContent  = e.ant4 ?? 0;
+                        cells[9].textContent  = e.rssi ?? '';
 
-                    row.innerHTML = `
-                        <td>${rowCount}</td>
-                        <td>${(e.protocol || '').toLowerCase()}</td>
-                        <td>${e.epc || ''}</td>
-                        <td>${e.tid || ''}</td>
-                        <td>${e.user_data || ''}</td>
-                        <td>${e.reserve_data || ''}</td>
-                        <td>${e.epc_bank || ''}</td>
-                        <td>${e.antenna == 1 ? '1' : '0'}</td>
-                        <td>${e.antenna == 2 ? '1' : '0'}</td>
-                        <td>${e.antenna == 3 ? '1' : '0'}</td>
-                        <td>${e.antenna == 4 ? '1' : '0'}</td>
-                        <td>${e.rssi || ''}</td>
-                    `;
+                        row.style.backgroundColor = '#fef9c3';
+                        setTimeout(() => { row.style.backgroundColor = ''; }, 400);
 
                         tableBody.insertBefore(row, tableBody.firstChild);
                     } else {
                         rowCount++;
-                        const totalCount = (e.ant1 ?? 0) + (e.ant2 ?? 0) + (e.ant3 ?? 0) + (e.ant4 ?? 0);
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -408,9 +423,6 @@
                             <td>${epc}</td>
                             <td>${e.tid || ''}</td>
                             <td>${e.user_data || ''}</td>
-                            <td></td>
-                            <td></td>
-                            <td>${totalCount}</td>
                             <td>${e.ant1 ?? 0}</td>
                             <td>${e.ant2 ?? 0}</td>
                             <td>${e.ant3 ?? 0}</td>
