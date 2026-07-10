@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Reader;
 use App\Models\ScanSession;
 use App\Models\Tag;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\JsonResponse; 
 use Illuminate\Http\Request;
 
 class StandaloneIngestController extends Controller
