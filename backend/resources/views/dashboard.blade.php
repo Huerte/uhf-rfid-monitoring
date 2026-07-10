@@ -165,7 +165,7 @@
         .grid-table th:first-child, .grid-table td:first-child {
             width: 40px;
             text-align: center;
-            background-color: #417ac0ff;
+            background-color: #417ac0ff; 
             border-right: 1px solid #D4D4D4;
             position: relative;
         }
