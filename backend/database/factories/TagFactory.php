@@ -19,6 +19,10 @@ class TagFactory extends Factory
             'tid' => strtoupper($this->faker->regexify('[A-F0-9]{24}')),
             'user_data' => strtoupper($this->faker->regexify('[A-F0-9]{16}')),
             'antenna' => $this->faker->numberBetween(1, 4),
+            'ant1' => $this->faker->numberBetween(0, 50),
+            'ant2' => $this->faker->numberBetween(0, 50),
+            'ant3' => $this->faker->numberBetween(0, 50),
+            'ant4' => $this->faker->numberBetween(0, 50),
             'rssi' => $this->faker->randomFloat(2, -90, -30),
             'scanned_at' => $this->faker->dateTimeThisMonth(),
         ];
