@@ -12,8 +12,6 @@
 - Python 3.10.x
 - UHF RFID Reader (RealOpenIoT G-Series)
 
-**Troubleshoot:** [ask ChatGPT](https://chatgpt.com)
-
 ---
 
 ## Step 1: Install the Reader SDK
@@ -26,8 +24,6 @@ Open `example/ReadEpc.py` and change the reader IP here:
 ```python
 if g_client.openTcp(("192.168.1.168", 8160)):
 ```
-
-**Troubleshoot:** [ask ChatGPT](https://chatgpt.com)
 
 ---
 
@@ -42,8 +38,6 @@ php artisan key:generate
 php artisan reverb:install
 php artisan migrate
 ```
-
-**Troubleshoot:** [ask ChatGPT](https://chatgpt.com)
 
 ---
 
@@ -68,8 +62,6 @@ python ReadEpc.py
 
 Or just run `python run.py` at the repo root to launch everything at once (Windows only). `python stop.py` kills it.
 
-**Troubleshoot:** [ask ChatGPT](https://chatgpt.com)
-
 ---
 
 ## Step 4: View It
@@ -80,7 +72,9 @@ http://127.0.0.1:8000/
 
 Live table of scanned tags. Search, click a row to copy EPC, export to CSV.
 
-**Troubleshoot:** [ask ChatGPT](https://chatgpt.com)
+---
+
+## Troubleshoot: [ask ChatGPT](https://chatgpt.com)
 
 ---
 
