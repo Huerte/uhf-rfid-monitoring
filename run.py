@@ -32,4 +32,4 @@ webbrowser.open("http://127.0.0.1:8000/")
 with open(PID_FILE, "w") as f:
     json.dump(pids, f)
 
-print(f"\nSaved {len(pids)} PIDs to {PID_FILE}")
+print(f"\nNa save an {len(pids)} PIDs to {PID_FILE}")
