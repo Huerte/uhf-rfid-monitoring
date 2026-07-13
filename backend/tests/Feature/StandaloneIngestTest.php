@@ -13,4 +13,5 @@ use Tests\TestCase;
 class StandaloneIngestTest extends TestCase
 {
     // I SHALL RETURN BOY!!!
+    public function lol() {return true;}
 }

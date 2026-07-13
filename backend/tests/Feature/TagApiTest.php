@@ -11,4 +11,5 @@ use Tests\TestCase;
 class TagApiTest extends TestCase
 {
     // Sa sunod na ini
+    public function lol() {return true;}
 }
