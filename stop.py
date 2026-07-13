@@ -5,7 +5,7 @@ import subprocess
 PID_FILE = "running_pids.json"
 stopped_any = False
 
-print("=== Stopping RFID Monitoring System ===")
+print("Stopping RFID monitoring system")
 
 if os.path.exists(PID_FILE):
     try:
@@ -15,19 +15,14 @@ if os.path.exists(PID_FILE):
         for pid in pids:
             try:
                 subprocess.run(["taskkill", "/PID", str(pid), "/F", "/T"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                print(f"[OK] Stopped process tree for PID {pid} (from json)")
+                print(f"Stopped PID {pid}")
                 stopped_any = True
             except subprocess.CalledProcessError:
                 pass
                 
         os.remove(PID_FILE)
-        print("[INFO] Cleared running_pids.json")
     except Exception as e:
-        print(f"[WARN] Could not process {PID_FILE}: {e}")
-else:
-    print("[INFO] No running_pids.json found. Proceeding to fallback cleanup...")
-
-print("[INFO] Scanning for any orphan project processes in the background...")
+        print(f"Binoang di ma-process {PID_FILE}: {e}")
 
 try:
     ps_command = """
@@ -52,15 +47,15 @@ try:
             
         try:
             subprocess.run(["taskkill", "/PID", str(pid), "/F", "/T"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            print(f"[OK] Stopped orphan project process (PID {pid})")
+            print(f"Stopped orphan PID {pid}")
             stopped_any = True
         except subprocess.CalledProcessError:
             pass
 
 except Exception as e:
-    print(f"[WARN] Fallback cleanup encountered an issue: {e}")
+    print(f"Fallback cleanup error: {e}")
 
 if not stopped_any:
-    print("[INFO] No running instances found. Everything is already closed!")
+    print("Aguy way nakit-an")
 else:
-    print("[SUCCESS] All project instances stopped successfully.")
+    print("Goods")
