@@ -12,15 +12,20 @@ class TagFactory extends Factory
 
     public function definition(): array
     {
+        $protocols = ['epc', '6b', 'gb'];
         return [
             'scan_session_id' => ScanSession::factory(),
-            'protocol' => $this->faker->randomElement(['epc', '6b', 'gb']),
-            'epc' => strtoupper($this->faker->regexify('[A-F0-9]{24}')),
-            'tid' => strtoupper($this->faker->regexify('[A-F0-9]{24}')),
-            'user_data' => strtoupper($this->faker->regexify('[A-F0-9]{16}')),
-            'antenna' => $this->faker->numberBetween(1, 4),
-            'rssi' => $this->faker->randomFloat(2, -90, -30),
-            'scanned_at' => $this->faker->dateTimeThisMonth(),
+            'protocol' => $protocols[array_rand($protocols)],
+            'epc' => strtoupper(bin2hex(random_bytes(12))),
+            'tid' => strtoupper(bin2hex(random_bytes(12))),
+            'user_data' => strtoupper(bin2hex(random_bytes(8))),
+            'antenna' => rand(1, 4),
+            'ant1' => 0,
+            'ant2' => 0,
+            'ant3' => 0,
+            'ant4' => 0,
+            'rssi' => round(rand(-9000, -3000) / 100, 2),
+            'scanned_at' => now()->subDays(rand(0, 30)),
         ];
     }
 }

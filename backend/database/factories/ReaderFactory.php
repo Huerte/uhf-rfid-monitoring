@@ -12,11 +12,11 @@ class ReaderFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->word() . ' Reader',
-            'ip' => $this->faker->ipv4(),
-            'port' => $this->faker->numberBetween(1000, 9999),
-            'connected' => $this->faker->boolean(80),
-            'connected_at' => $this->faker->dateTimeThisMonth(),
+            'name' => 'Reader ' . rand(1, 999),
+            'ip' => rand(192, 255) . '.' . rand(0, 255) . '.' . rand(0, 255) . '.' . rand(1, 254),
+            'port' => rand(1000, 9999),
+            'connected' => (rand(1, 100) <= 80),
+            'connected_at' => now()->subDays(rand(0, 30)),
         ];
     }
 } 
