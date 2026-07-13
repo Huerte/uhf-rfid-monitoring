@@ -10,6 +10,8 @@ use Tests\TestCase;
 
 class TagApiTest extends TestCase
 {
-    // Sa sunod na ini
-    public function lol() {return true;}
+    public function test_the_feature_test_class_is_discoverable(): void
+    {
+        $this->assertInstanceOf(TestCase::class, $this);
+    }
 }
