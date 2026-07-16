@@ -260,6 +260,7 @@
     <script type="module">
         let rowCount = 0;
         const tableBody = document.querySelector('#tags-table tbody');
+        const rowMap = new Map();
 
         // Function to handle row selection highlighting
         function updateSelection() {
@@ -315,6 +316,7 @@
         clearBtn.addEventListener('click', () => {
             tableBody.innerHTML = '';
             rowCount = 0;
+            rowMap.clear();
             updateCounters();
         });
 
@@ -392,8 +394,6 @@
                 console.error('[RFID] window.Echo is not available.');
                 return;
             }
-
-            const rowMap = new Map();
 
             window.Echo.channel('rfid.live')
                 .listen('.tag.scanned', (e) => {
