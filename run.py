@@ -11,7 +11,7 @@ jobs = [
     {"cwd": BASE_DIR / "backend", "cmd": "npm run dev"},
     {"cwd": BASE_DIR / "backend", "cmd": "php artisan reverb:start"},
     {"cwd": BASE_DIR / "backend", "cmd": "php artisan serve --port=8000"},
-    {"cwd": BASE_DIR / "example", "cmd": "python ReadEpc.py"},
+    {"cwd": BASE_DIR / "backend" / "rfid-bridge", "cmd": "node read-epc.js"},
 ]
 
 pids = []
