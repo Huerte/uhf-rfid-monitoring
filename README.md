@@ -1,6 +1,8 @@
-# UHF RFID Tag Monitoring System Setup Guide
+# Setup Guide 📝
 
-This project reads RFID tag scans from a hardware reader and displays them in real time on a web page.
+<p align="center">
+  <img width="736" height="580" alt="blueprint" src="https://github.com/user-attachments/assets/af08b2c3-d725-4380-bc85-acd0f517d5bb" />
+</p>
 
 ---
 
@@ -143,3 +145,14 @@ Once all 4 terminals are running, open your web browser and visit `http://127.0.
 
 * **Problem: Page loads but scans do not update in real time**
   * *Fix:* Make sure the Reverb WebSocket server terminal (`php artisan reverb:start`) is running without errors.
+
+> [!TIP]
+> Still not fix? [ask ChatGPT](https://chatgpt.com)
+
+---
+
+## Well Done 👏
+
+<p align="center">
+  <img width="498" height="498" alt="clapping-leonardo-dicaprio" src="https://github.com/user-attachments/assets/385f0c79-0ec4-4d33-991a-758b18524b06" />
+</p>
