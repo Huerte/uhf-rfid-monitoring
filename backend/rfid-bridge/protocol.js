@@ -1,9 +1,4 @@
-/**
- * Protocol engine for G-Series / GNetPlus UHF RFID Readers
- * Implements exact binary frame structure and CRC-16 (0x1021) algorithm.
- */
-
-// CRC-16 CCITT Table (poly 0x1021 dumped directly from GReaderApi.dll)
+// CRC-16 CCITT Table (poly 0x1021)
 const CRC16_TABLE = new Uint16Array([
   0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
   0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
@@ -39,9 +34,6 @@ const CRC16_TABLE = new Uint16Array([
   0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0
 ]);
 
-/**
- * Calculate CRC16-CCITT for a buffer (excluding header 0x5A)
- */
 export function crc16(buffer) {
   let crc = 0;
   for (let i = 0; i < buffer.length; i++) {
@@ -86,9 +78,6 @@ export function buildAntennaMask(antennaList) {
   return mask === 0 ? EnumG.AntennaNo_1 : mask;
 }
 
-/**
- * Build a standard outgoing frame
- */
 export function buildFrame(pType, pVersion, baseType, msgId, cData = Buffer.alloc(0)) {
   const dataLen = cData.length;
   const headerPart = Buffer.from([pType, pVersion, baseType, msgId]);
@@ -101,47 +90,25 @@ export function buildFrame(pType, pVersion, baseType, msgId, cData = Buffer.allo
   return Buffer.concat([Buffer.from([HEADER_BYTE]), payloadToCrc, crcBuf]);
 }
 
-/**
- * Build MsgBaseInventoryEpc frame
- */
 export function buildMsgInventoryEpc(antennaMask, inventoryMode = EnumG.InventoryMode_Inventory, options = {}) {
-  // Base cData: AntennaMask (4 bytes uint32 BE) + InventoryMode (1 byte)
   const antennaBuf = Buffer.alloc(4);
   antennaBuf.writeUInt32BE(antennaMask, 0);
   const modeBuf = Buffer.from([inventoryMode]);
 
   let cData = Buffer.concat([antennaBuf, modeBuf]);
 
-  // Optional: ReadTid
   if (options.readTid) {
     const mode = options.readTid.mode ?? EnumG.ParamTidMode_Auto;
     const len = options.readTid.dataLen ?? 6;
-    const tidBuf = Buffer.from([mode, len, 0, 0]); // ParamEpcReadTid
+    const tidBuf = Buffer.from([mode, len, 0, 0]);
     cData = Buffer.concat([cData, tidBuf]);
   }
 
   return buildFrame(0x00, 0x01, 0x02, 0x10, cData);
 }
 
-/**
- * Build MsgBaseStop frame
- */
 export function buildMsgStop() {
   return buildFrame(0x00, 0x01, 0x02, 0xFF, Buffer.alloc(0));
-}
-
-/**
- * Build MsgBaseWriteEpc frame
- */
-export function buildMsgWriteEpc(antennaEnable = 1, area = EnumG.WriteArea_Epc, start = 1, hexWriteData = '') {
-  const hexBytes = Buffer.from(hexWriteData, 'hex');
-  const payload = Buffer.alloc(6 + hexBytes.length);
-  payload.writeUInt32BE(antennaEnable, 0);
-  payload.writeUInt8(area, 4);
-  payload.writeUInt8(start, 5);
-  hexBytes.copy(payload, 6);
-
-  return buildFrame(0x00, 0x01, 0x02, 0x11, payload);
 }
 
 /**
@@ -180,40 +147,26 @@ export function parseFrame(buffer) {
   };
 }
 
-/**
- * Parse LogBaseEpcInfo payload into tag object.
- * Layout (from uhfReaderApi v1.0.4 source):
- *   [2 bytes] epcLength (byte count)
- *   [N bytes] EPC bytes
- *   [2 bytes] PC word
- *   [1 byte]  antId
- *   TLV blocks: [1 byte pid] + value (pid-dependent size)
- */
 export function parseLogBaseEpcInfo(payload) {
   if (!payload || payload.length < 4) return null;
 
   let offset = 0;
 
-  // [2 bytes] epcLength — number of EPC bytes
   const epcLength = payload.readUInt16BE(offset);
   offset += 2;
 
-  // [epcLength bytes] EPC data
   let epc = '';
   if (epcLength > 0 && payload.length >= offset + epcLength) {
     epc = payload.subarray(offset, offset + epcLength).toString('hex').toUpperCase();
   }
   offset += epcLength;
 
-  // [2 bytes] PC (Protocol Control word)
   const pc = payload.length >= offset + 2 ? payload.readUInt16BE(offset) : 0;
   offset += 2;
 
-  // [1 byte] antId
   const antId = payload.length > offset ? payload[offset] : 1;
   offset += 1;
 
-  // TLV optional fields
   let rssi = 0;
   let result = 0;
   let tid = '';
@@ -225,13 +178,10 @@ export function parseLogBaseEpcInfo(payload) {
     if (offset > payload.length) break;
 
     if (pid === 1) {
-      // rssi: 1 byte
       rssi = payload[offset]; offset += 1;
     } else if (pid === 2) {
-      // result: 1 byte (0 = success, non-zero = error)
       result = payload[offset]; offset += 1;
     } else if (pid === 3) {
-      // TID: [2 bytes] length + N bytes
       if (offset + 2 > payload.length) break;
       const tidLen = payload.readUInt16BE(offset); offset += 2;
       if (tidLen > 0 && offset + tidLen <= payload.length) {
@@ -239,48 +189,36 @@ export function parseLogBaseEpcInfo(payload) {
       }
       offset += tidLen;
     } else if (pid === 4) {
-      // userData: [2 bytes] length + N bytes (skip)
       if (offset + 2 > payload.length) break;
       const userLen = payload.readUInt16BE(offset); offset += 2;
       offset += userLen;
     } else if (pid === 5) {
-      // reserved: [2 bytes] length + N bytes (skip)
       if (offset + 2 > payload.length) break;
       const resLen = payload.readUInt16BE(offset); offset += 2;
       offset += resLen;
     } else if (pid === 6) {
-      // childAntId: 1 byte
       offset += 1;
     } else if (pid === 7) {
-      // UTC: utcSecond (4 bytes) + utcMicrosecond (4 bytes)
       offset += 8;
     } else if (pid === 8) {
-      // frequencyPoint: 4 bytes
       offset += 4;
     } else if (pid === 9) {
-      // phase: 1 byte
       offset += 1;
     } else if (pid === 10) {
-      // epcData: [2 bytes] length + N bytes (skip)
       if (offset + 2 > payload.length) break;
       const epcDataLen = payload.readUInt16BE(offset); offset += 2;
       offset += epcDataLen;
     } else if (pid === 0x11 || pid === 0x12 || pid === 0x13 || pid === 0x14) {
-      // ctesius / kunYue / rssidBm variants: 2 bytes each
       offset += 2;
     } else if (pid === 0x20) {
-      // readerSerialNumber: [2 bytes] length + N bytes string
       if (offset + 2 > payload.length) break;
       const snLen = payload.readUInt16BE(offset); offset += 2;
       offset += snLen;
     } else if (pid === 0x22) {
-      // replySerialNumber: 4 bytes
       offset += 4;
     } else if (pid === 0x24) {
-      // cykeoRule: 1 byte
       offset += 1;
     } else {
-      // Unknown PID — stop to avoid misalignment
       break;
     }
   }

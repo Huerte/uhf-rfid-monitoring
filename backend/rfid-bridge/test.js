@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { buildMsgInventoryEpc, buildMsgStop, buildMsgWriteEpc, parseFrame, parseLogBaseEpcInfo, crc16 } from './protocol.js';
+import { buildMsgInventoryEpc, buildMsgStop, parseFrame, parseLogBaseEpcInfo, crc16 } from './protocol.js';
 
 console.log('Running RFID Bridge Protocol Tests...');
 
@@ -29,8 +29,8 @@ assert.strictEqual(parsedStop.msgId, 0xFF);
 console.log('✓ Frame parser and CRC-16 check verified');
 
 // 5. Parse LogBaseEpcInfo Payload
-// Payload: Result(0), PC(0x3000), EPC Len(12), EPC(E28011223344556677889900), AntId(1), RSSI(75)
-const logPayloadHex = '0030000CE28011223344556677889900014B';
+// Payload: EPC Len(12), EPC(E28011223344556677889900), PC(0x3000), AntId(1), TLV: RSSI(75), Result(0)
+const logPayloadHex = '000CE28011223344556677889900300001014B0200';
 const logPayload = Buffer.from(logPayloadHex, 'hex');
 const epcInfo = parseLogBaseEpcInfo(logPayload);
 
