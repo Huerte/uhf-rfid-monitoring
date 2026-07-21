@@ -1,4 +1,6 @@
-# Setup Guide 📝
+<h1 align="center">
+  The Forbidden Setup Guide 📝
+</h1>
 
 <p align="center">
   <img width="736" height="580" alt="blueprint" src="https://github.com/user-attachments/assets/af08b2c3-d725-4380-bc85-acd0f517d5bb" />
