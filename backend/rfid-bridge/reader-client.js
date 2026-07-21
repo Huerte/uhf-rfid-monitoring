@@ -61,22 +61,36 @@ export class ReaderClient extends EventEmitter {
       this.buffer = this.buffer.subarray(frame.totalLength);
 
       if (frame.isValidCrc) {
+        if (process.env.DEBUG_FRAMES) {
+          console.log(`[DBG] Frame msgId=0x${frame.msgId.toString(16).padStart(2,'0')} baseType=0x${frame.baseType.toString(16).padStart(2,'0')} dataLen=${frame.dataLen} payload=${frame.payload.toString('hex').toUpperCase()}`);
+        }
         this.handleFrame(frame);
       } else {
-        console.warn('[!] Received frame with invalid CRC, skipping');
+        // CRC mismatch — log raw bytes to help diagnose framing issues
+        console.warn(`[!] Bad CRC frame (raw): ${this.buffer.subarray(0, Math.min(frame.totalLength, 64)).toString('hex').toUpperCase()}`);
       }
     }
   }
 
   handleFrame(frame) {
-    // Check for LogBaseEpcInfo (msgId = 0x00 or baseType log)
-    // baseType 0x02 or 0x03 (log event)
-    if (frame.msgId === 0x00) {
+    // byte 3 of frame is the mt nibble byte: lower 4 bits = mt_8_11
+    // Msg_Type_Bit_Base = 2 identifies reader-pushed log events
+    const isBaseLog = (frame.baseType & 0x0F) === 2;
+
+    if (isBaseLog && frame.msgId === 0x00) { // BaseLogMid_Epc
       const epcInfo = parseLogBaseEpcInfo(frame.payload);
-      if (epcInfo && epcInfo.result === 0) {
-        this.emit('epcInfo', epcInfo);
+      if (process.env.DEBUG_FRAMES) {
+        console.log(`[DBG] Parsed epcInfo:`, JSON.stringify(epcInfo));
       }
-    } else if (frame.msgId === 0x01) {
+      if (epcInfo) {
+        if (!epcInfo.epc) {
+          console.warn(`[!] Empty EPC. Raw payload: ${frame.payload.toString('hex').toUpperCase()}`);
+        }
+        if (epcInfo.result === 0) {
+          this.emit('epcInfo', epcInfo);
+        }
+      }
+    } else if (isBaseLog && frame.msgId === 0x01) { // BaseLogMid_EpcOver
       this.emit('epcOver');
     }
   }

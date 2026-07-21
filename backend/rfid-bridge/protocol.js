@@ -181,42 +181,109 @@ export function parseFrame(buffer) {
 }
 
 /**
- * Parse LogBaseEpcInfo payload into tag object
+ * Parse LogBaseEpcInfo payload into tag object.
+ * Layout (from uhfReaderApi v1.0.4 source):
+ *   [2 bytes] epcLength (byte count)
+ *   [N bytes] EPC bytes
+ *   [2 bytes] PC word
+ *   [1 byte]  antId
+ *   TLV blocks: [1 byte pid] + value (pid-dependent size)
  */
 export function parseLogBaseEpcInfo(payload) {
-  if (!payload || payload.length < 6) return null;
+  if (!payload || payload.length < 4) return null;
 
-  const result = payload[0];
-  const pc = payload.readUInt16BE(1);
-  const epcLen = payload[3];
+  let offset = 0;
 
+  // [2 bytes] epcLength — number of EPC bytes
+  const epcLength = payload.readUInt16BE(offset);
+  offset += 2;
+
+  // [epcLength bytes] EPC data
   let epc = '';
-  if (epcLen > 0 && payload.length >= 4 + epcLen) {
-    epc = payload.subarray(4, 4 + epcLen).toString('hex').toUpperCase();
+  if (epcLength > 0 && payload.length >= offset + epcLength) {
+    epc = payload.subarray(offset, offset + epcLength).toString('hex').toUpperCase();
   }
+  offset += epcLength;
 
-  let offset = 4 + epcLen;
+  // [2 bytes] PC (Protocol Control word)
+  const pc = payload.length >= offset + 2 ? payload.readUInt16BE(offset) : 0;
+  offset += 2;
+
+  // [1 byte] antId
   const antId = payload.length > offset ? payload[offset] : 1;
   offset += 1;
 
-  const rssi = payload.length > offset ? payload[offset] : 0;
-  offset += 1;
-
+  // TLV optional fields
+  let rssi = 0;
+  let result = 0;
   let tid = '';
-  if (payload.length > offset) {
-    const tidLen = payload[offset];
+
+  while (offset < payload.length) {
+    const pid = payload[offset];
     offset += 1;
-    if (tidLen > 0 && payload.length >= offset + tidLen) {
-      tid = payload.subarray(offset, offset + tidLen).toString('hex').toUpperCase();
+
+    if (offset > payload.length) break;
+
+    if (pid === 1) {
+      // rssi: 1 byte
+      rssi = payload[offset]; offset += 1;
+    } else if (pid === 2) {
+      // result: 1 byte (0 = success, non-zero = error)
+      result = payload[offset]; offset += 1;
+    } else if (pid === 3) {
+      // TID: [2 bytes] length + N bytes
+      if (offset + 2 > payload.length) break;
+      const tidLen = payload.readUInt16BE(offset); offset += 2;
+      if (tidLen > 0 && offset + tidLen <= payload.length) {
+        tid = payload.subarray(offset, offset + tidLen).toString('hex').toUpperCase();
+      }
+      offset += tidLen;
+    } else if (pid === 4) {
+      // userData: [2 bytes] length + N bytes (skip)
+      if (offset + 2 > payload.length) break;
+      const userLen = payload.readUInt16BE(offset); offset += 2;
+      offset += userLen;
+    } else if (pid === 5) {
+      // reserved: [2 bytes] length + N bytes (skip)
+      if (offset + 2 > payload.length) break;
+      const resLen = payload.readUInt16BE(offset); offset += 2;
+      offset += resLen;
+    } else if (pid === 6) {
+      // childAntId: 1 byte
+      offset += 1;
+    } else if (pid === 7) {
+      // UTC: utcSecond (4 bytes) + utcMicrosecond (4 bytes)
+      offset += 8;
+    } else if (pid === 8) {
+      // frequencyPoint: 4 bytes
+      offset += 4;
+    } else if (pid === 9) {
+      // phase: 1 byte
+      offset += 1;
+    } else if (pid === 10) {
+      // epcData: [2 bytes] length + N bytes (skip)
+      if (offset + 2 > payload.length) break;
+      const epcDataLen = payload.readUInt16BE(offset); offset += 2;
+      offset += epcDataLen;
+    } else if (pid === 0x11 || pid === 0x12 || pid === 0x13 || pid === 0x14) {
+      // ctesius / kunYue / rssidBm variants: 2 bytes each
+      offset += 2;
+    } else if (pid === 0x20) {
+      // readerSerialNumber: [2 bytes] length + N bytes string
+      if (offset + 2 > payload.length) break;
+      const snLen = payload.readUInt16BE(offset); offset += 2;
+      offset += snLen;
+    } else if (pid === 0x22) {
+      // replySerialNumber: 4 bytes
+      offset += 4;
+    } else if (pid === 0x24) {
+      // cykeoRule: 1 byte
+      offset += 1;
+    } else {
+      // Unknown PID — stop to avoid misalignment
+      break;
     }
   }
 
-  return {
-    result,
-    pc,
-    epc,
-    antenna: antId,
-    rssi,
-    tid
-  };
+  return { result, pc, epc, antenna: antId, rssi, tid };
 }
