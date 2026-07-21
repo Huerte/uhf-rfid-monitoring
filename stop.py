@@ -33,7 +33,7 @@ try:
         ($cmd -match 'npm run dev') -or 
         ($cmd -match 'artisan reverb:start') -or 
         ($cmd -match 'artisan serve') -or 
-        ($cmd -match 'ReadEpc.py') 
+        ($cmd -match 'read-epc.js') 
     } | 
     Select-Object -ExpandProperty ProcessId
     """

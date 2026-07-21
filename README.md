@@ -8,21 +8,18 @@
 
 - PHP 8.2+
 - Composer
-- Node.js
-- Python 3.10.x
+- Node.js (v18+)
 - UHF RFID Reader (RealOpenIoT G-Series)
 
 ---
 
-## Step 1: Install the Reader SDK
+## Step 1: Configure Reader Connection
 
-```bash
-pip install uhfReaderApi==1.0.4
-```
-
-Open `example/ReadEpc.py` and change the reader IP here:
-```python
-if g_client.openTcp(("192.168.1.168", 8160)):
+Open `backend/.env` and update reader IP and port:
+```env
+RFID_READER_IP=192.168.1.168
+RFID_READER_PORT=8160
+RFID_ANTENNAS=1,2,3,4
 ```
 
 ---
@@ -55,12 +52,12 @@ php artisan reverb:start
 npm run dev
 ```
 
-Then one more terminal in `example`:
+Then one more terminal in `backend/rfid-bridge`:
 ```bash
-python ReadEpc.py
+node read-epc.js
 ```
 
-Or just run `python run.py` at the repo root to launch everything at once (Windows only). `python stop.py` kills it.
+Or just run `python run.py` (or execute launcher) at the repo root to launch everything at once (Windows only). `python stop.py` kills it.
 
 ---
 
