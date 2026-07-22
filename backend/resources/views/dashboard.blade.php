@@ -230,7 +230,7 @@
         </button>
         <button id="btn-clear" class="toolbar-btn">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18v3"/></svg>
-            Clear Data
+            Clear
         </button>
         <div style="flex:1"></div>
         <span class="showing-label">Showing <b id="sb-showing">0</b> of <b id="sb-total">0</b></span>
