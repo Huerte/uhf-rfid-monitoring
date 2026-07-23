@@ -3,7 +3,10 @@ echo ===================================================
 echo     Stopping RFID Monitoring System...
 echo ===================================================
 
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -ne $null } | Where-Object { $cmd = $_.CommandLine; ($cmd -match 'npm run dev') -or ($cmd -match 'artisan reverb:start') -or ($cmd -match 'artisan serve') -or ($cmd -match 'read-epc.js') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+taskkill /F /T /FI "WINDOWTITLE eq Vite Frontend Server*"
+taskkill /F /T /FI "WINDOWTITLE eq Reverb WebSocket Server*"
+taskkill /F /T /FI "WINDOWTITLE eq Laravel Web Server*"
+taskkill /F /T /FI "WINDOWTITLE eq RFID Reader Bridge*"
 
 if exist running_pids.json (
     del /f /q running_pids.json
