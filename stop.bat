@@ -10,5 +10,5 @@ if exist running_pids.json (
 )
 
 echo.
-echo Goods, patay tanan terminal!!!
+echo Goods, stop na tanan terminal!!!
 pause
