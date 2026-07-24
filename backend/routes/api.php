@@ -5,7 +5,6 @@ use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('scans')->group(function () {
-    // Standalone ingest endpoint - for simple Python scripts bypassing the bridge
     Route::post('/standalone-ingest', [StandaloneIngestController::class, 'store']);
 });
 
