@@ -11,7 +11,7 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_sessions' => ScanSession::count(),
-            'running'        => ScanSession::where('status', 'running')->count(),
+            'running' => ScanSession::where('status', 'running')->count(),
         ];
 
         return view('dashboard', compact('stats'));

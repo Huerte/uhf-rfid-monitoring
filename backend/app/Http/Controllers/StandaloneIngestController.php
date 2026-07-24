@@ -6,7 +6,7 @@ use App\Events\TagScanned;
 use App\Models\Reader;
 use App\Models\ScanSession;
 use App\Models\Tag;
-use Illuminate\Http\JsonResponse; 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StandaloneIngestController extends Controller
@@ -15,14 +15,13 @@ class StandaloneIngestController extends Controller
     {
         $data = $request->validate([
             'protocol' => 'sometimes|string',
-            'epc'      => 'required|string',
-            'tid'      => 'nullable|string',
-            'rssi'     => 'nullable|numeric',
-            'antenna'  => 'nullable|integer',
+            'epc' => 'required|string',
+            'tid' => 'nullable|string',
+            'rssi' => 'nullable|numeric',
+            'antenna' => 'nullable|integer',
         ]);
 
         $antennaId = (int) ($data['antenna'] ?? 1);
-
         $antColumn = in_array($antennaId, [1, 2, 3, 4]) ? "ant{$antennaId}" : 'ant1';
 
         $reader = Reader::firstOrCreate(
@@ -36,26 +35,26 @@ class StandaloneIngestController extends Controller
         );
 
         $tag = Tag::where('scan_session_id', $session->id)
-                   ->where('epc', $data['epc'])
-                   ->first();
+            ->where('epc', $data['epc'])
+            ->first();
 
-        if ($tag === null) {
+        if (!$tag) {
             $tag = Tag::create([
                 'scan_session_id' => $session->id,
-                'protocol'        => $data['protocol'] ?? 'epc',
-                'epc'             => $data['epc'],
-                'tid'             => $data['tid'] ?? null,
-                'rssi'            => $data['rssi'] ?? null,
-                'antenna'         => $antennaId,
-                'scanned_at'      => now(),
-                $antColumn        => 1,
+                'protocol' => $data['protocol'] ?? 'epc',
+                'epc' => $data['epc'],
+                'tid' => $data['tid'] ?? null,
+                'rssi' => $data['rssi'] ?? null,
+                'antenna' => $antennaId,
+                'scanned_at' => now(),
+                $antColumn => 1,
             ]);
         } else {
             $tag->increment($antColumn);
             $tag->update([
                 'scanned_at' => now(),
-                'rssi'       => $data['rssi'] ?? $tag->rssi,
-                'antenna'    => $antennaId,
+                'rssi' => $data['rssi'] ?? $tag->rssi,
+                'antenna' => $antennaId,
             ]);
             $tag->refresh();
         }

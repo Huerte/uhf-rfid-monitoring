@@ -31,19 +31,19 @@ class TagScanned implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'id'          => $this->tag->id,
-            'session_id'  => $this->tag->scan_session_id,
-            'protocol'    => $this->tag->protocol,
-            'epc'         => $this->tag->epc,
-            'tid'         => $this->tag->tid,
-            'user_data'   => $this->tag->user_data,
-            'antenna'     => $this->tag->antenna,
-            'rssi'        => $this->tag->rssi,
-            'scanned_at'  => $this->tag->scanned_at?->toIso8601String(),
-            'ant1'        => $this->tag->ant1,
-            'ant2'        => $this->tag->ant2,
-            'ant3'        => $this->tag->ant3,
-            'ant4'        => $this->tag->ant4,
+            'id' => $this->tag->id,
+            'session_id' => $this->tag->scan_session_id,
+            'protocol' => $this->tag->protocol,
+            'epc' => $this->tag->epc,
+            'tid' => $this->tag->tid,
+            'user_data' => $this->tag->user_data,
+            'antenna' => $this->tag->antenna,
+            'rssi' => $this->tag->rssi,
+            'scanned_at' => $this->tag->scanned_at?->toIso8601String(),
+            'ant1' => $this->tag->ant1,
+            'ant2' => $this->tag->ant2,
+            'ant3' => $this->tag->ant3,
+            'ant4' => $this->tag->ant4,
         ];
     }
 }
