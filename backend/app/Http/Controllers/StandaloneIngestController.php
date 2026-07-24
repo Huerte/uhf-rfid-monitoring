@@ -26,7 +26,7 @@ class StandaloneIngestController extends Controller
         $antColumn = in_array($antennaId, [1, 2, 3, 4]) ? "ant{$antennaId}" : 'ant1';
 
         $reader = Reader::firstOrCreate(
-            ['ip' => '127.0.0.1', 'port' => 0],
+            ['ip' => config('rfid.reader_ip'), 'port' => config('rfid.reader_port')],
             ['connected' => true]
         );
 
