@@ -1,8 +1,7 @@
 import http from 'http';
 import fs from 'fs';
-import path from 'path';
 
-export async function sendTagToLaravel(epcInfo, targetUrl = 'http://127.0.0.1:8000/api/scans/standalone-ingest') {
+export async function sendTagToLaravel(epcInfo, targetUrl) {
   const url = new URL(targetUrl);
   const payload = JSON.stringify({
     protocol: 'epc',

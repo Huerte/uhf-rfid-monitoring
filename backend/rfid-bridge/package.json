@@ -9,7 +9,15 @@
     "read-epc": "node read-epc.js",
     "test": "node test.js"
   },
-  "keywords": ["rfid", "uhf", "laravel", "bridge"],
+  "keywords": [
+    "rfid",
+    "uhf",
+    "laravel",
+    "bridge"
+  ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2"
+  }
 }
